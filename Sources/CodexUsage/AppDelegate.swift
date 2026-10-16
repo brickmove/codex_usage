@@ -2,10 +2,12 @@ import AppKit
 import SwiftUI
 import Combine
 import Network
+import UsageCore
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowDelegate {
-    private let model = AppModel()
+    private let model: AppModel
+    init(model: AppModel) { self.model = model; super.init() }
     private var statusItem: NSStatusItem!
     private let popover = NSPopover()
     private var settingsWindow: NSWindow?
@@ -53,8 +55,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
             openSettings()
             return
         }
-        if !UserDefaults.standard.bool(forKey: "didShowWelcome") {
-            UserDefaults.standard.set(true, forKey: "didShowWelcome")
+        if model.isPreview || !UserDefaults.standard.bool(forKey: "didShowWelcome") {
+            if !model.isPreview { UserDefaults.standard.set(true, forKey: "didShowWelcome") }
             DispatchQueue.main.async { [weak self] in self?.showPopover() }
         }
     }
@@ -99,7 +101,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         guard !popover.isShown, let button = statusItem.button else { return }
         model.resumeIfNeeded()
         if model.showNewsIndicator { model.selectedTab = .resetNews }
-        popover.contentSize = NSSize(width: 400, height: model.selectedTab == .usage && model.settings.range == .custom ? 750 : 660)
+        // 状态项可能位于外接屏；同一高度同时交给 SwiftUI 和 NSPopover。
+        let availableHeight = button.window?.screen?.visibleFrame.height ?? NSScreen.main?.visibleFrame.height ?? 692
+        model.panelHeight = PanelLayout.height(availableHeight: availableHeight)
+        popover.contentSize = NSSize(width: 400, height: model.panelHeight)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         NSApp.activate(ignoringOtherApps: true)
         popover.contentViewController?.view.window?.makeKey()

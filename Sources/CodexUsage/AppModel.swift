@@ -3,7 +3,7 @@ import Combine
 import UsageCore
 
 enum PanelTab: String, CaseIterable, Identifiable {
-    case usage, resetNews
+    case usage, analysis, resetNews
     var id: String { rawValue }
 }
 
@@ -22,6 +22,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var statisticsSourceRunning = StatisticsSourceController.isRunning
     @Published private(set) var statisticsSourceError: String?
     @Published var now = Date()
+    @Published var panelHeight: Double = 660
     @Published var newsInbox: ResetNewsInbox
     @Published var loadingNews = false
     @Published var selectedTab: PanelTab = .usage {
@@ -185,8 +186,8 @@ final class AppModel: ObservableObject {
         refreshStatistics()
     }
     func setCustomRange(start: Date, end: Date) {
-        do { _ = try UsageRange(start: start, end: end) }
-        catch { statisticsError = error.localizedDescription; return }
+        // 输入处负责显示验证文案，拒绝的草稿不能污染已应用数据或来源错误。
+        guard UsageRange.validationMessage(start: start, end: end) == nil else { return }
         settings.customStart = start; settings.customEnd = end; settings.range = .custom
         statistics = nil; statisticsError = nil
         refreshStatistics()

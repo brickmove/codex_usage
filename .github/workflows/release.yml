@@ -76,5 +76,5 @@ jobs:
           gh release upload "$RELEASE_TAG" \
             "$RELEASE_SOURCE/dist/$PACKAGE_NAME" \
             "$RELEASE_SOURCE/dist/$PACKAGE_NAME.sha256" --clobber
-          gh release edit "$RELEASE_TAG" --draft=false --latest
+          gh release edit "$RELEASE_TAG" --draft=false
           gh release view "$RELEASE_TAG" --json url,tagName,isDraft,assets

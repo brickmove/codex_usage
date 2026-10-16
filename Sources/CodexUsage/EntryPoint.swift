@@ -13,8 +13,10 @@ struct CodexUsageMain {
             --settings：启动并打开设置窗口
             --diagnose [--statistics-only] [--range today|last24Hours|week|month|all]
                        [--database PATH] [--codex-path PATH] [--codex-home PATH]
-            --preview OUTPUT.png [--dark] [--unsynced]：导出使用示例数据的界面预览
-            --preview-settings OUTPUT.png [--dark]：导出菜单栏设置预览
+            --preview OUTPUT.png [--dark] [--unsynced] [--stale] [--compact-panel]：导出示例预览
+            --preview-analysis OUTPUT.png [--dark] [--empty] [--failed]：导出 Token 构成预览
+            --preview-settings OUTPUT.png [--dark] [--section menu|data|news]：导出设置预览
+            --demo [--settings]：运行隔离示例界面，不保存设置或查询账户
             --preview-news OUTPUT.png [--dark]：导出重置动态示例预览
             --diagnose-news：检查 AIHOT 重置动态（遵守缓存与检查间隔）
             --diagnose-wake：模拟唤醒恢复，输出可用状态，不输出邮箱或凭据
@@ -25,12 +27,12 @@ struct CodexUsageMain {
         if args.contains("--diagnose-news") { diagnoseNews(); return }
         if args.contains("--diagnose-wake") { diagnoseWake(); return }
         let app = NSApplication.shared
-        if let index = args.firstIndex(of: "--preview") ?? args.firstIndex(of: "--preview-settings") ?? args.firstIndex(of: "--preview-news"), args.indices.contains(index + 1) {
-            do { try preview(path: args[index + 1], dark: args.contains("--dark"), settings: args.contains("--preview-settings"), news: args.contains("--preview-news"), unsynced: args.contains("--unsynced")) }
+        if let index = args.firstIndex(where: { ["--preview", "--preview-settings", "--preview-news", "--preview-analysis"].contains($0) }), args.indices.contains(index + 1) {
+            do { try preview(path: args[index + 1], args: args) }
             catch { fputs("预览失败：\(error.localizedDescription)\n", stderr); exit(1) }
             return
         }
-        let delegate = AppDelegate(); app.delegate = delegate
+        let delegate = AppDelegate(model: args.contains("--demo") ? AppModel.previewModel() : AppModel()); app.delegate = delegate
         withExtendedLifetime(delegate) { app.run() }
     }
 
@@ -148,12 +150,30 @@ struct CodexUsageMain {
         if let error = inbox.lastError { output["error"] = error }
         if let data = try? JSONSerialization.data(withJSONObject: output, options: [.prettyPrinted, .sortedKeys]), let text = String(data: data, encoding: .utf8) { print(text) }
     }
-    @MainActor private static func preview(path: String, dark: Bool, settings: Bool, news: Bool, unsynced: Bool) throws {
-        let model = AppModel.previewModel(unsynced: unsynced)
-        if news { model.selectedTab = .resetNews }
-        let content = (settings ? AnyView(SettingsView(model: model, close: {})) : AnyView(PopoverView(model: model)))
+    @MainActor private static func preview(path: String, args: [String]) throws {
+        let dark = args.contains("--dark"), settings = args.contains("--preview-settings")
+        let model = AppModel.previewModel(unsynced: args.contains("--unsynced"))
+        model.statistics?.queriedRange = try? model.settings.resolvedRange(now: model.now)
+        if args.contains("--preview-news") { model.selectedTab = .resetNews }
+        if args.contains("--preview-analysis") { model.selectedTab = .analysis }
+        if args.contains("--stale") { model.quota?.queriedAt = model.now.addingTimeInterval(-3600) }
+        if args.contains("--empty") {
+            var empty = UsageSummary(); empty.lastSyncedAt = model.now
+            empty.queriedRange = model.statistics?.queriedRange; model.statistics = empty
+        }
+        if args.contains("--failed") { model.statisticsError = "示例：暂时无法读取数据库，请重试。" }
+        if args.contains("--invalid-range") {
+            model.settings.range = .custom
+            model.settings.customStart = model.now.addingTimeInterval(3600); model.settings.customEnd = model.now
+        }
+        if args.contains("--compact-panel") { model.panelHeight = PanelLayout.height(availableHeight: 550) }
+        var category: SettingsCategory = .menu
+        if let i = args.firstIndex(of: "--section"), args.indices.contains(i + 1) {
+            category = SettingsCategory(rawValue: args[i + 1]) ?? .menu
+        }
+        let content = (settings ? AnyView(SettingsView(model: model, initialCategory: category, close: {})) : AnyView(PopoverView(model: model)))
             .environment(\.colorScheme, dark ? .dark : .light)
-        let size = NSSize(width: settings ? 520 : 400, height: settings ? 650 : 660)
+        let size = NSSize(width: settings ? 520 : 400, height: settings ? 650 : model.panelHeight)
         let view = NSHostingView(rootView: content)
         view.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
         let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)

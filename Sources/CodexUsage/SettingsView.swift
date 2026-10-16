@@ -2,65 +2,76 @@ import SwiftUI
 import AppKit
 import UsageCore
 
+enum SettingsCategory: String, CaseIterable, Identifiable {
+    case menu, data, news
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .menu: return "菜单栏"
+        case .data: return "数据与刷新"
+        case .news: return "重置动态"
+        }
+    }
+}
+
+/// 分类仅切换可见内容，所有编辑共用一份草稿，取消不会调用 apply。
 struct SettingsView: View {
     @ObservedObject var model: AppModel
     @State private var draft: AppSettings
+    @State private var category: SettingsCategory
     let close: () -> Void
-    init(model: AppModel, close: @escaping () -> Void) {
+    init(model: AppModel, initialCategory: SettingsCategory = .menu, close: @escaping () -> Void) {
         self.model = model; self.close = close
         _draft = State(initialValue: model.settings)
+        _category = State(initialValue: initialCategory)
+    }
+    private var rangeError: String? {
+        draft.range == .custom ? UsageRange.validationMessage(start: draft.customStart, end: draft.customEnd) : nil
     }
     var body: some View {
         VStack(spacing: 0) {
-            menuPreview
+            Picker("设置分类", selection: $category) {
+                ForEach(SettingsCategory.allCases) { Text($0.title).tag($0) }
+            }.pickerStyle(.segmented).labelsHidden().padding(16)
+            if category == .menu { menuPreview }
             Divider()
             Form {
-                Section("重置动态") {
-                    Toggle("获取 AIHOT 重置动态", isOn: $draft.resetNewsEnabled)
-                    Toggle("有新动态时在菜单栏提示", isOn: $draft.showResetNewsIndicator)
-                        .disabled(!draft.resetNewsEnabled)
-                    Picker("检查间隔", selection: $draft.resetNewsInterval) {
-                        Text("手动检查").tag(TimeInterval(0))
-                        Text("每 10 分钟（默认）").tag(TimeInterval(600))
-                        Text("每 30 分钟").tag(TimeInterval(1800))
-                        Text("每 1 小时").tag(TimeInterval(3600))
-                    }.disabled(!draft.resetNewsEnabled)
-                    Text("新公告或实质更新会显示铃铛图标；查看“重置动态”后恢复。首次加载历史记录不提示。最短检查间隔为 10 分钟。")
-                        .font(.caption).foregroundStyle(.secondary)
+                switch category {
+                case .menu:
+                    Section("菜单栏显示") {
+                        ForEach(orderedMetrics) { metric in
+                            menuMetricRow(metric)
+                        }
+                        HStack {
+                            Button("恢复默认显示") { draft.menuMetrics = MenuMetric.defaults }
+                            Button("仅显示图标") { draft.menuMetrics = [] }
+                        }.controlSize(.small)
+                        Text("菜单栏以图标和数值显示，用上下箭头调整顺序。悬停可查看指标名称与时间范围。")
+                            .font(.caption).foregroundStyle(.secondary)
                 }
-                Section("菜单栏显示") {
-                    ForEach(orderedMetrics) { metric in
-                        menuMetricRow(metric)
-                    }
-                    HStack {
-                        Button("恢复默认显示") { draft.menuMetrics = MenuMetric.defaults }
-                        Button("仅显示图标") { draft.menuMetrics = [] }
-                    }.controlSize(.small)
-                    Text("菜单栏以图标和数值显示，用上下箭头调整顺序。悬停可查看指标名称与时间范围。")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                Section("自动刷新") {
-                    Toggle("自动在后台启动 CC Switch", isOn: $draft.automaticallyStartCCSwitch)
-                    Text("用量由 CC Switch 同步。开启后，CC Switch 未运行时会在后台启动；关闭本工具不会退出 CC Switch。")
-                        .font(.caption).foregroundStyle(.secondary)
-                    Text("后台同步可能延迟约 10 分钟。需要更快更新时，请打开 CC Switch 的用量统计页并启用自动扫描。")
-                        .font(.caption).foregroundStyle(.secondary)
-                    Picker("账户额度", selection: $draft.quotaInterval) {
-                        Text("手动刷新").tag(TimeInterval(0))
-                        Text("每 1 分钟").tag(TimeInterval(60))
-                        Text("每 5 分钟（默认）").tag(TimeInterval(300))
-                        Text("每 10 分钟").tag(TimeInterval(600))
-                        Text("每 15 分钟").tag(TimeInterval(900))
-                    }
-                    Picker("本地统计", selection: $draft.statisticsInterval) {
-                        Text("手动刷新").tag(TimeInterval(0))
-                        Text("每 15 秒").tag(TimeInterval(15))
-                        Text("每 30 秒（默认）").tag(TimeInterval(30))
-                        Text("每 1 分钟").tag(TimeInterval(60))
-                        Text("每 5 分钟").tag(TimeInterval(300))
-                    }
-                    Text("启动和唤醒时刷新。倒计时在本地更新，不会额外发送查询。")
-                        .font(.caption).foregroundStyle(.secondary)
+                case .data:
+                    Section("自动刷新") {
+                        Toggle("自动在后台启动 CC Switch", isOn: $draft.automaticallyStartCCSwitch)
+                        Text("用量由 CC Switch 同步。开启后，CC Switch 未运行时会在后台启动；关闭本工具不会退出 CC Switch。")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Text("后台同步可能延迟约 10 分钟。需要更快更新时，请打开 CC Switch 的用量统计页并启用自动扫描。")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Picker("账户额度", selection: $draft.quotaInterval) {
+                            Text("手动刷新").tag(TimeInterval(0))
+                            Text("每 1 分钟").tag(TimeInterval(60))
+                            Text("每 5 分钟（默认）").tag(TimeInterval(300))
+                            Text("每 10 分钟").tag(TimeInterval(600))
+                            Text("每 15 分钟").tag(TimeInterval(900))
+                        }
+                        Picker("本地统计", selection: $draft.statisticsInterval) {
+                            Text("手动刷新").tag(TimeInterval(0))
+                            Text("每 15 秒").tag(TimeInterval(15))
+                            Text("每 30 秒（默认）").tag(TimeInterval(30))
+                            Text("每 1 分钟").tag(TimeInterval(60))
+                            Text("每 5 分钟").tag(TimeInterval(300))
+                        }
+                        Text("启动和唤醒时刷新。倒计时在本地更新，不会额外发送查询。")
+                            .font(.caption).foregroundStyle(.secondary)
                 }
                 Section("统计范围") {
                     Picker("统计时间范围", selection: $draft.range) {
@@ -69,6 +80,7 @@ struct SettingsView: View {
                     if draft.range == .custom {
                         DatePicker("开始时间", selection: $draft.customStart, displayedComponents: [.date, .hourAndMinute])
                         DatePicker("结束时间", selection: $draft.customEnd, displayedComponents: [.date, .hourAndMinute])
+                        if let error = rangeError { Label(error, systemImage: "exclamationmark.circle").foregroundStyle(.orange) }
                     }
                 }
                 Section("数据来源") {
@@ -80,15 +92,36 @@ struct SettingsView: View {
                     Text("CC Switch 停止同步时，统计数据也会停止更新。")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                case .news:
+                    Section("重置动态") {
+                        Toggle("获取 AIHOT 重置动态", isOn: $draft.resetNewsEnabled)
+                        Toggle("有新动态时在菜单栏提示", isOn: $draft.showResetNewsIndicator)
+                            .disabled(!draft.resetNewsEnabled)
+                        Picker("检查间隔", selection: $draft.resetNewsInterval) {
+                            Text("手动检查").tag(TimeInterval(0))
+                            Text("每 10 分钟（默认）").tag(TimeInterval(600))
+                            Text("每 30 分钟").tag(TimeInterval(1800))
+                            Text("每 1 小时").tag(TimeInterval(3600))
+                        }.disabled(!draft.resetNewsEnabled)
+                        Text("新公告或实质更新会显示铃铛图标；查看“重置动态”后恢复。首次加载历史记录不提示。最短检查间隔为 10 分钟。")
+                            .font(.caption).foregroundStyle(.secondary)
+                }
+                }
             }.formStyle(.grouped)
             Divider()
-            HStack {
-                Button("恢复默认") { draft = AppSettings() }
-                Spacer()
-                Button("取消", action: close).keyboardShortcut(.cancelAction)
-                Button("保存并刷新") { model.apply(draft); close() }
-                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
-                    .disabled(draft.range == .custom && draft.customStart > draft.customEnd)
+            VStack(alignment: .leading, spacing: 8) {
+                if let error = rangeError {
+                    Label(error + " 请在“数据与刷新”中修正。", systemImage: "exclamationmark.circle")
+                        .font(.system(size: 11)).foregroundStyle(.orange)
+                }
+                HStack {
+                    Button("恢复全部默认") { draft = AppSettings() }
+                    Spacer()
+                    Button("取消", action: close).keyboardShortcut(.cancelAction)
+                    Button("保存并刷新") { model.apply(draft); close() }
+                        .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                        .disabled(rangeError != nil)
+                }
             }.padding(16)
         }.frame(width: 520, height: 650)
             .background(Color(nsColor: .windowBackgroundColor)).tint(AppStyle.accent)
@@ -145,7 +178,7 @@ struct SettingsView: View {
             Text(label).font(.callout)
             HStack {
                 TextField(placeholder, text: text).textFieldStyle(.roundedBorder)
-                    .font(.system(size: 11, design: .monospaced)).accessibilityLabel(label)
+                    .labelsHidden().font(.system(size: 11, design: .monospaced)).accessibilityLabel(label)
                 Button("选择…") {
                     let panel = NSOpenPanel(); panel.canChooseDirectories = directory; panel.canChooseFiles = !directory
                     panel.allowsMultipleSelection = false; panel.prompt = "选择"

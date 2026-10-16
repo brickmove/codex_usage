@@ -11,7 +11,7 @@ struct ResetNewsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Tibo 重置动态").font(.system(size: 14, weight: .semibold))
                         Text(model.isPreview ? "示例数据 · 北京时间 UTC+8" : "AIHOT 整理 · 北京时间 UTC+8")
-                            .font(.system(size: 10)).foregroundStyle(.secondary)
+                            .font(.system(size: 11)).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Link("来源网页 ↗", destination: ResetNewsSource.pageURL).font(.system(size: 11))
@@ -56,8 +56,8 @@ struct ResetNewsView: View {
                         Text("近期暂无重置或重置卡发放记录。")
                             .font(.callout).foregroundStyle(.secondary).padding(.vertical, 12)
                     }
-                    Text("展示近期更新和仍待生效的预告。确认帖时间不等于精确到账时间；预计窗口不是到账确认。个人额度请查看“用量”。")
-                        .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Text("展示近期更新和仍待生效的预告。确认帖时间不等于精确到账时间；预计窗口不是到账确认。个人额度请查看“概览”。")
+                        .font(.system(size: 11)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 } else if model.loadingNews {
                     HStack(spacing: 10) {
                         ProgressView().controlSize(.small)
@@ -67,13 +67,13 @@ struct ResetNewsView: View {
                     Text("还没有可显示的重置动态。").font(.callout).foregroundStyle(.secondary).padding(.vertical, 12)
                 }
                 HStack {
-                    Text("非 OpenAI 官方页面").font(.system(size: 10)).foregroundStyle(.secondary)
+                    Text("非 OpenAI 官方页面").font(.system(size: 11)).foregroundStyle(.secondary)
                     Spacer()
                     Button("检查更新") { model.refreshNews() }.controlSize(.small).disabled(!model.canRefreshNews)
                 }
                 if let date = model.newsInbox.nextAllowedFetchAt, date > model.now, model.settings.resetNewsEnabled {
                     Text("下次可检查 " + ResetNewsSource.dateText(date))
-                        .font(.system(size: 10)).foregroundStyle(.secondary)
+                        .font(.system(size: 11)).foregroundStyle(.secondary)
                 }
             }.padding(18)
         }.scrollIndicators(.hidden)
@@ -89,14 +89,14 @@ struct ResetNewsView: View {
                 if model.now.timeIntervalSince(date) > 1800 { Text("来源核对已超过 30 分钟").foregroundStyle(.orange) }
             } else { Text("来源未提供核对时间") }
             if let date = model.newsInbox.receivedAt { Text("本机获取 " + ResetNewsSource.dateText(date)) }
-        }.font(.system(size: 10)).foregroundStyle(.secondary)
+        }.font(.system(size: 11)).foregroundStyle(.secondary)
     }
     private func eventCard(_ event: ResetNewsEvent) -> some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack(alignment: .top) {
-                Text(event.kindText).font(.system(size: 10, weight: .medium)).foregroundStyle(.secondary)
+                Text(event.kindText).font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary)
                 Spacer()
-                Text(event.statusText).font(.system(size: 10, weight: .medium))
+                Text(event.statusText).font(.system(size: 11, weight: .medium))
                     .foregroundStyle(event.isConfirmed ? AppStyle.accent : .orange)
                     .multilineTextAlignment(.trailing)
             }
@@ -126,7 +126,7 @@ struct ResetNewsView: View {
         HStack {
             Text(text).font(.system(size: 11, weight: .semibold))
             Spacer()
-            Text(String(count) + " 条").font(.system(size: 10))
+            Text(String(count) + " 条").font(.system(size: 11))
         }.foregroundStyle(.secondary)
     }
 }
