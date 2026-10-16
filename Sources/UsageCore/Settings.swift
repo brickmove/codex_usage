@@ -22,6 +22,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var menuIconRendering: MenuIconRendering = .template
     public var customMenuIcon: Data?
     public var customMenuIconName: String?
+    public var metricIcons: [String: MenuMetricIcon] = [:]
+    public var menuIconSet: MenuIconSet = .standard
     public var theme: AppTheme = .teal
     public var appearance: AppAppearance = .system
     public var resetNewsEnabled = true
@@ -33,6 +35,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         case databasePath, codexPath, codexHome, quotaInterval, statisticsInterval, automaticallyStartCCSwitch
         case range, customStart, customEnd, menuMetrics, resetNewsEnabled, showResetNewsIndicator, resetNewsInterval
         case menuIcon, menuIconSize, menuIconRendering, customMenuIcon, customMenuIconName, theme, appearance
+        case metricIcons, menuIconSet
     }
     private enum LegacyKeys: String, CodingKey { case showCreditsInMenu, showResetInMenu }
 
@@ -54,6 +57,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
         menuIconRendering = (try? c.decode(String.self, forKey: .menuIconRendering)).flatMap(MenuIconRendering.init(rawValue:)) ?? menuIconRendering
         customMenuIcon = try? c.decode(Data.self, forKey: .customMenuIcon)
         customMenuIconName = try? c.decode(String.self, forKey: .customMenuIconName)
+        menuIconSet = (try? c.decode(String.self, forKey: .menuIconSet)).flatMap(MenuIconSet.init(rawValue:)) ?? menuIconSet
+        if let icons = try? c.nestedContainer(keyedBy: IconKey.self, forKey: .metricIcons) {
+            for key in icons.allKeys where MenuMetric(rawValue: key.stringValue) != nil {
+                if let icon = try? icons.decode(MenuMetricIcon.self, forKey: key) { metricIcons[key.stringValue] = icon }
+            }
+        }
         theme = (try? c.decode(String.self, forKey: .theme)).flatMap(AppTheme.init(rawValue:)) ?? theme
         appearance = (try? c.decode(String.self, forKey: .appearance)).flatMap(AppAppearance.init(rawValue:)) ?? appearance
         resetNewsEnabled = try c.decodeIfPresent(Bool.self, forKey: .resetNewsEnabled) ?? resetNewsEnabled
@@ -74,6 +83,31 @@ public struct AppSettings: Codable, Equatable, Sendable {
         if enabled {
             if !menuMetrics.contains(metric) { menuMetrics.append(metric) }
         } else { menuMetrics.removeAll { $0 == metric } }
+    }
+    private struct IconKey: CodingKey {
+        let stringValue: String
+        var intValue: Int? { nil }
+        init?(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { return nil }
+    }
+    public var defaultMenuMetricIcon: MenuMetricIcon {
+        var icon = MenuMetricIcon()
+        icon.size = menuIconSize
+        return icon
+    }
+    public func icon(for metric: MenuMetric) -> MenuMetricIcon {
+        metricIcons[metric.rawValue] ?? defaultMenuMetricIcon
+    }
+    public mutating func setIcon(_ icon: MenuMetricIcon, for metric: MenuMetric) {
+        metricIcons[metric.rawValue] = icon
+    }
+    public mutating func selectIconSet(_ set: MenuIconSet) {
+        menuIconSet = set; metricIcons.removeAll()
+        menuIcon = .automatic; customMenuIcon = nil; customMenuIconName = nil
+    }
+    public mutating func resetMetricIcons() {
+        menuIconSet = .standard; menuIconSize = .regular; metricIcons.removeAll()
+        menuIcon = .automatic; menuIconRendering = .template; customMenuIcon = nil; customMenuIconName = nil
     }
     public mutating func moveMenuMetric(_ metric: MenuMetric, by offset: Int) {
         guard let index = menuMetrics.firstIndex(of: metric), menuMetrics.indices.contains(index + offset) else { return }

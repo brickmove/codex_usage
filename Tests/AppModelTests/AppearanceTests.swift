@@ -7,6 +7,69 @@ import UsageCore
 
 @MainActor
 final class AppearanceTests: XCTestCase {
+    private func attachments(_ title: NSAttributedString) -> [(NSTextAttachment, Int)] {
+        var result: [(NSTextAttachment, Int)] = []
+        title.enumerateAttribute(.attachment, in: NSRange(location: 0, length: title.length)) { value, range, _ in
+            if let attachment = value as? NSTextAttachment { result.append((attachment, range.location)) }
+        }
+        return result
+    }
+
+    func testActualAttributedTitleReplacesEveryMetricIconWithoutAddingPrefix() async throws {
+        let model = AppModel.previewModel()
+        var settings = model.settings; settings.menuIconSet = .filled; settings.menuMetrics = [.credits, .tokens]
+        let items = model.menuPresentation(for: settings).items
+        let title = StatusItemContent.title(items: items, settings: settings)
+        let images = attachments(title)
+        XCTAssertEqual(images.count, 2, "每个值前各有一个图标，不额外加统一图标")
+        XCTAssertEqual(images[0].1, 0)
+        XCTAssertTrue(title.string.hasPrefix("\u{fffc} 62.2K"))
+        for (index, item) in items.enumerated() {
+            let expected = try XCTUnwrap(MenuBarIcon.groupImage(.filled, metric: item.metric, size: .regular)?.tiffRepresentation)
+            XCTAssertEqual(images[index].0.image?.tiffRepresentation, expected)
+        }
+        XCTAssertNotEqual(images[0].0.image?.tiffRepresentation, images[1].0.image?.tiffRepresentation)
+        XCTAssertNil(MenuBarIcon.image(settings: settings, unread: false, notice: nil, hasMetrics: true))
+    }
+
+    func testEveryIconGroupRendersDifferentSymbolsForEveryMetric() async throws {
+        let model = AppModel.previewModel()
+        var settings = model.settings; settings.menuMetrics = MenuMetric.allCases
+        for set in MenuIconSet.allCases {
+            settings.selectIconSet(set)
+            let items = model.menuPresentation(for: settings).items
+            let title = StatusItemContent.title(items: items, settings: settings)
+            let icons = attachments(title)
+            XCTAssertEqual(icons.count, MenuMetric.allCases.count)
+            var rendered = Set<Data>()
+            for metric in MenuMetric.allCases {
+                let image = try XCTUnwrap(MenuBarIcon.groupImage(set, metric: metric, size: .regular), "\(set.rawValue) / \(metric.rawValue) 缺失")
+                XCTAssertTrue(image.isTemplate)
+                rendered.insert(try XCTUnwrap(image.tiffRepresentation))
+            }
+            XCTAssertEqual(rendered.count, MenuMetric.allCases.count, "同一图标组中不同指标不应变为相同图像")
+        }
+    }
+
+    func testCustomMetricAttachmentCarriesItsOwnImageColorAndSize() async throws {
+        let model = AppModel.previewModel()
+        var settings = model.settings; settings.menuMetrics = [.credits, .requests]
+        var icon = MenuMetricIcon(); icon.style = .custom; icon.size = .large; icon.rendering = .original
+        icon.imageData = try MenuIconImporter.normalize(encode(image())).pngData
+        settings.setIcon(icon, for: .credits)
+        let items = model.menuPresentation(for: settings).items
+        let title = StatusItemContent.title(items: items, settings: settings)
+        let images = attachments(title)
+        XCTAssertEqual(images.count, 2)
+        XCTAssertEqual(images[0].0.bounds.height, 20)
+        XCTAssertEqual(images[0].0.image?.isTemplate, false)
+        XCTAssertEqual(images[0].0.image?.accessibilityDescription, "Credits 余额")
+        XCTAssertEqual(images[1].0.image?.isTemplate, true)
+        XCTAssertNotEqual(images[0].0.image?.tiffRepresentation, images[1].0.image?.tiffRepresentation)
+        let preview = MenuBarValuesPreview(items: items, settings: settings)
+        XCTAssertEqual(preview.settings, settings, "预览和实际状态项使用同一份图标配置")
+    }
+
     func testDragTargetsOnlySelectedRowsAndRejectsOutsideRelease() async {
         let frames: [MenuMetric: CGRect] = [.credits: CGRect(x: 0, y: 0, width: 400, height: 30),
                                            .requests: CGRect(x: 0, y: 40, width: 400, height: 30),
@@ -95,11 +158,12 @@ final class AppearanceTests: XCTestCase {
         let file = directory.appendingPathComponent("source.png")
         try encode(image()).write(to: file)
         var settings = AppSettings()
-        settings.customMenuIcon = try MenuIconImporter.read(file).pngData; settings.menuIcon = .custom
+        var custom = MenuMetricIcon(); custom.style = .custom; custom.rendering = .original
+        custom.imageData = try MenuIconImporter.read(file).pngData; settings.setIcon(custom, for: .credits)
         let encoded = try JSONEncoder().encode(settings)
         try FileManager.default.removeItem(at: file)
         let restored = try JSONDecoder().decode(AppSettings.self, from: encoded)
-        XCTAssertNotNil(MenuBarIcon.image(settings: restored, unread: false, notice: nil, hasMetrics: true))
+        XCTAssertEqual(MenuBarIcon.metricImage(for: .credits, settings: restored)?.isTemplate, false)
     }
 
     func testCustomIconSizeRenderingAndAlertPriority() async throws {
@@ -107,11 +171,13 @@ final class AppearanceTests: XCTestCase {
         XCTAssertNil(MenuBarIcon.image(settings: settings, unread: false, notice: nil, hasMetrics: true))
         settings.menuIcon = .custom
         settings.customMenuIcon = try MenuIconImporter.normalize(encode(image())).pngData
+        var custom = MenuMetricIcon(); custom.style = .custom; custom.imageData = settings.customMenuIcon
         for size in MenuIconSize.allCases {
             settings.menuIconSize = size
             for rendering in MenuIconRendering.allCases {
                 settings.menuIconRendering = rendering
-                let icon = try XCTUnwrap(MenuBarIcon.image(settings: settings, unread: false, notice: nil, hasMetrics: true))
+                custom.size = size; custom.rendering = rendering; settings.setIcon(custom, for: .credits)
+                let icon = try XCTUnwrap(MenuBarIcon.metricImage(for: .credits, settings: settings))
                 XCTAssertEqual(icon.size, NSSize(width: size.rawValue, height: size.rawValue))
                 XCTAssertEqual(icon.isTemplate, rendering == .template)
             }
@@ -121,8 +187,10 @@ final class AppearanceTests: XCTestCase {
         XCTAssertEqual(unread.accessibilityDescription, "有新的重置动态")
         let notice = try XCTUnwrap(MenuBarIcon.image(settings: settings, unread: false, notice: "等待同步", hasMetrics: true))
         XCTAssertEqual(notice.accessibilityDescription, "等待同步")
-        settings.customMenuIcon = Data([0, 1])
-        XCTAssertNotNil(MenuBarIcon.image(settings: settings, unread: false, notice: nil, hasMetrics: true), "损坏图标回退到内置图标")
+        settings.customMenuIcon = Data([0, 1]); custom.imageData = settings.customMenuIcon
+        settings.setIcon(custom, for: .credits)
+        XCTAssertNotNil(MenuBarIcon.metricImage(for: .credits, settings: settings), "损坏图标回退到此指标的默认图标")
+        XCTAssertNil(MenuBarIcon.image(settings: settings, unread: false, notice: nil, hasMetrics: true), "有指标时不额外添加自定义前置图标")
         for icon in MenuIconStyle.allCases where icon != .custom {
             settings.menuIcon = icon
             XCTAssertNotNil(MenuBarIcon.image(settings: settings, unread: false, notice: nil, hasMetrics: false))

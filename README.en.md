@@ -21,6 +21,8 @@
   <a href="https://github.com/brickmove/codex_usage/issues">Report an issue</a>
 </p>
 
+> The main branch includes an unreleased icon-set fix. The latest download remains v0.5.0. Public releases are at least one calendar month apart; see the [changelog](CHANGELOG.md) and [release policy](docs/development.md#发布流程) (Simplified Chinese).
+
 A native SwiftUI / AppKit menu bar app that uses your existing Codex sign-in and reads statistics already stored by CC Switch. Keep the metrics you choose in the menu bar, then open the panel for account details, limits, and usage.
 
 <table>
@@ -31,7 +33,7 @@ A native SwiftUI / AppKit menu bar app that uses your existing Codex sign-in and
   </tr>
 </table>
 
-*Screenshots show the native 0.5.0 interface in Simplified Chinese. All accounts, usage, and news shown are sample data, not real account data or official announcements. Click an image to view it at full size.*
+*Screenshots show the released native 0.5.0 interface; unreleased changes are listed in the changelog. The interface is in Simplified Chinese. All accounts, usage, and news shown are sample data, not real account data or official announcements. Click an image to view it at full size.*
 
 ## Features
 
@@ -40,7 +42,7 @@ A native SwiftUI / AppKit menu bar app that uses your existing Codex sign-in and
 | How much capacity is left | Weekly and other limit windows, Credits, automatic reset times, and available resets |
 | What appears in the menu bar | Choose metrics, drag to reorder, or show only the icon; hover for full metric names and time ranges |
 | How much you used in a time range | Stored cost, token usage, request count, and cache hit rate; defaults to today, with other ranges available |
-| How to customize the look | Built-in or imported menu bar icons in three sizes; six themes with independent System, Light, and Dark modes |
+| How to customize the look | Four icon sets with distinct symbols for each metric, optional per-metric images, and three sizes; six themes with independent System, Light, and Dark modes |
 | Where tokens went | New input, output, cache writes, and cache hits, with counts and shares |
 | Whether there is reset news | A dedicated news tab, source links, and an optional unread indicator in the menu bar |
 | Whether the data is current | Distinct states for expired data, pending sync, and actual zero usage; automatic refresh across midnight and after wake |
@@ -128,7 +130,7 @@ The detailed guides and release notes below are currently in Simplified Chinese.
 
 - [User guide](docs/user-guide.md): display metrics, refresh settings, statistics sync, accounts, and reset news.
 - [Development guide](docs/development.md): building, packaging, diagnostics, tests, and reproducing screenshots.
-- [Verification record](docs/verification.md): 118 tests, native interface checks, and areas not yet tested.
+- [Verification record](docs/verification.md): 125 app tests and 9 release-policy tests on main, native interface checks, and areas not yet tested.
 - [Reset news protocol](docs/reset-news.md) · [Third-party notices](THIRD_PARTY_NOTICES.md).
 - [Releases and installers](https://github.com/brickmove/codex_usage/releases): [v0.5.0](docs/releases/v0.5.0.md) · [v0.4.0](docs/releases/v0.4.0.md) · [v0.3.3](https://github.com/brickmove/codex_usage/releases/tag/v0.3.3).
 

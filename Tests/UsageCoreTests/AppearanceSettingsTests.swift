@@ -2,6 +2,54 @@ import XCTest
 @testable import UsageCore
 
 final class AppearanceSettingsTests: XCTestCase {
+    func testMetricIconsAreIndependentAndSurvivePersistenceAndReordering() throws {
+        var settings = AppSettings()
+        var credits = MenuMetricIcon(); credits.style = .bolt; credits.size = .large
+        var tokens = MenuMetricIcon(); tokens.style = .custom; tokens.imageData = Data([1, 2, 3]); tokens.rendering = .original
+        settings.setIcon(credits, for: .credits); settings.setIcon(tokens, for: .tokens)
+        settings.menuMetrics = [.credits, .tokens]
+        settings.moveMenuMetric(.tokens, to: 0)
+        let loaded = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings))
+        XCTAssertEqual(loaded.icon(for: .credits), credits)
+        XCTAssertEqual(loaded.icon(for: .tokens), tokens)
+        XCTAssertEqual(loaded.icon(for: .quotaRemaining).style, .automatic)
+        XCTAssertEqual(loaded.menuMetrics, [.tokens, .credits])
+    }
+
+    func testSelectingGroupReplacesOverridesButKeepsDistinctMetricMeanings() throws {
+        var settings = AppSettings()
+        var custom = MenuMetricIcon(); custom.style = .bolt
+        settings.setIcon(custom, for: .credits)
+        for set in MenuIconSet.allCases {
+            settings.selectIconSet(set)
+            XCTAssertTrue(settings.metricIcons.isEmpty)
+            XCTAssertEqual(Set(MenuMetric.allCases.map { set.symbolName(for: $0) }).count, MenuMetric.allCases.count,
+                           "整套图标必须保留每个指标的独立语义，不能全变成同一图标")
+            let restored = try JSONDecoder().decode(AppSettings.self, from: JSONEncoder().encode(settings))
+            XCTAssertEqual(restored.menuIconSet, set)
+        }
+    }
+
+    func testLegacyPrefixIconIsNotCopiedOntoEveryMetric() throws {
+        let data = Data(#"{"menuIcon":"bolt","menuIconSize":20,"menuMetrics":["tokens","credits"],"databasePath":"/keep.db","menuIconSet":"future"}"#.utf8)
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertEqual(settings.menuIconSet, .standard)
+        XCTAssertEqual(settings.menuIcon, .bolt, "仅图标模式保留旧配置")
+        XCTAssertEqual(settings.icon(for: .tokens).style, .automatic)
+        XCTAssertEqual(settings.icon(for: .credits).size, .large)
+        XCTAssertEqual(settings.databasePath, "/keep.db")
+        XCTAssertEqual(settings.menuMetrics, [.tokens, .credits])
+    }
+
+    func testBadMetricEntryDoesNotDiscardOtherIconsOrPreferences() throws {
+        let data = Data(#"{"metricIcons":{"credits":{"style":"bolt"},"tokens":false,"unknown":{"style":"chart"}},"range":"month"}"#.utf8)
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertEqual(settings.icon(for: .credits).style, .bolt)
+        XCTAssertEqual(settings.icon(for: .tokens).style, .automatic)
+        XCTAssertNil(settings.metricIcons["unknown"])
+        XCTAssertEqual(settings.range, .month)
+    }
+
     func testDraggingMovesAcrossMultiplePositionsWithoutSwappingOtherMetrics() throws {
         var settings = AppSettings()
         settings.menuMetrics = [.credits, .requests, .cost, .tokens]

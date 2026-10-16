@@ -67,7 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         let image = MenuBarIcon.image(settings: model.settings, unread: indicator,
                                       notice: presentation.statisticsNotice, hasMetrics: !presentation.items.isEmpty)
         statusItem.button?.image = image
-        statusItem.button?.attributedTitle = StatusItemContent.title(items: presentation.items, leadingSpace: image != nil)
+        statusItem.button?.attributedTitle = StatusItemContent.title(items: presentation.items, settings: model.settings, leadingSpace: image != nil)
         popover.appearance = model.settings.appearance.nativeAppearance
         let errors = [model.quotaError.map { "额度：" + $0 }, model.statisticsError.map { "统计：" + $0 }].compactMap { $0 }
         let news = indicator ? "有 \(model.unreadNewsCount) 条未读重置动态，点击查看\n" : ""

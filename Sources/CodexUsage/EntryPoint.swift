@@ -18,6 +18,7 @@ struct CodexUsageMain {
             --preview-settings OUTPUT.png [--dark] [--section menu|appearance|data|news]：导出设置预览
             --demo [--settings]：运行隔离示例界面，不保存设置或查询账户
             示例与预览还支持 --theme teal|ocean|forest|iris|sand|graphite 和 --appearance system|light|dark
+            --icon-set standard|filled|circular|minimal：示例或预览的菜单栏图标组
             --preview-news OUTPUT.png [--dark]：导出重置动态示例预览
             --diagnose-news：检查 AIHOT 重置动态（遵守缓存与检查间隔）
             --diagnose-wake：模拟唤醒恢复，输出可用状态，不输出邮箱或凭据
@@ -200,6 +201,12 @@ struct CodexUsageMain {
     }
 
     @MainActor private static func configureAppearance(args: [String], model: AppModel) throws {
+        if let index = args.firstIndex(of: "--icon-set") {
+            guard args.indices.contains(index + 1), let set = MenuIconSet(rawValue: args[index + 1]) else {
+                throw UsageError.message("无效图标组；请选择 standard、filled、circular 或 minimal。")
+            }
+            model.settings.selectIconSet(set)
+        }
         if let index = args.firstIndex(of: "--theme") {
             guard args.indices.contains(index + 1), let theme = AppTheme(rawValue: args[index + 1]) else {
                 throw UsageError.message("无效主题；请选择 teal、ocean、forest、iris、sand 或 graphite。")

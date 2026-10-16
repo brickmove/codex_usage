@@ -32,6 +32,7 @@ struct SettingsView: View {
     @State private var draft: AppSettings
     @State private var category: SettingsCategory
     @State private var iconError: String?
+    @State private var iconTarget = "quotaRemaining"
     @State private var dropTarget: MenuMetric?
     @State private var draggedMetric: MenuMetric?
     @State private var metricFrames: [MenuMetric: CGRect] = [:]
@@ -65,7 +66,7 @@ struct SettingsView: View {
             Form {
                 switch category {
                 case .menu:
-                    MenuIconSettings(settings: $draft, error: $iconError)
+                    MenuIconSettings(settings: $draft, error: $iconError, target: $iconTarget)
                     Section("菜单栏显示") {
                         ForEach(orderedMetrics) { metric in
                             menuMetricRow(metric)
@@ -185,7 +186,7 @@ struct SettingsView: View {
                                                      notice: presentation.statisticsNotice, hasMetrics: !presentation.items.isEmpty) {
                         Image(nsImage: image).renderingMode(image.isTemplate ? .template : .original)
                     }
-                    if !presentation.items.isEmpty { MenuBarValuesPreview(items: presentation.items).fixedSize() }
+                    if !presentation.items.isEmpty { MenuBarValuesPreview(items: presentation.items, settings: draft).fixedSize() }
                 }.font(.system(size: 12, weight: .medium))
                     .padding(.horizontal, 10).padding(.vertical, 9)
             }.background(style.card, in: RoundedRectangle(cornerRadius: 8))

@@ -1,9 +1,9 @@
-name: 发布 macOS 安装包
+name: 检查月度发布间隔与打包
 
 on:
   push:
     tags: ['v*']
-    branches: ['release/v*']
+    branches: [main, 'release/v*']
   workflow_dispatch:
     inputs:
       tag:
@@ -19,7 +19,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  policy:
+    name: 检查一个自然月的发布间隔
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      eligible: ${{ steps.interval.outputs.eligible }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          persist-credentials: false
+      - name: 验证发布规则
+        run: python3 -m unittest discover -s Tests/ReleasePolicyTests -v
+      - name: 核对最近一次公开发布
+        id: interval
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --paginate --slurp "repos/$GH_REPO/releases" > "$RUNNER_TEMP/published-releases.json"
+          python3 scripts/release-policy.py --releases-json "$RUNNER_TEMP/published-releases.json" \
+            --github-output "$GITHUB_OUTPUT" | tee "$RUNNER_TEMP/release-policy.json"
+          {
+            echo '### 月度发布检查'
+            echo '普通 main 提交只检查规则，不创建 Release。未满一个自然月时，打包发布任务直接跳过。'
+            echo '```json'
+            cat "$RUNNER_TEMP/release-policy.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
   release:
+    needs: policy
+    if: needs.policy.outputs.eligible == 'true' && (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/release/'))
     runs-on: macos-15
     timeout-minutes: 20
     permissions:
@@ -27,6 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          ref: main
           fetch-depth: 0
           persist-credentials: false
       - name: 确认标签与独立源码目录
@@ -65,6 +98,13 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
+          # 构建期间若出现其他公开发布，再次检查间隔；不创建草稿或上传附件。
+          gh api --paginate --slurp "repos/$GH_REPO/releases" > "$RUNNER_TEMP/final-releases.json"
+          python3 scripts/release-policy.py --releases-json "$RUNNER_TEMP/final-releases.json" > "$RUNNER_TEMP/final-policy.json"
+          if ! jq -e '.eligible == true' "$RUNNER_TEMP/final-policy.json" >/dev/null; then
+            cat "$RUNNER_TEMP/final-policy.json"
+            exit 0
+          fi
           # 已有正式发布保持原样，防止重跑覆盖用户下载到的版本。
           if gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' > "$RUNNER_TEMP/release-draft-state" 2>/dev/null; then
             [[ "$(cat "$RUNNER_TEMP/release-draft-state")" == true ]] || { echo '该版本已正式发布，不覆盖附件'; exit 1; }

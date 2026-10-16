@@ -1,5 +1,47 @@
 import Foundation
 
+public enum MenuIconSet: String, Codable, CaseIterable, Identifiable, Sendable {
+    case standard, filled, circular, minimal
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .standard: return "经典线框"
+        case .filled: return "实心"
+        case .circular: return "圆形"
+        case .minimal: return "极简"
+        }
+    }
+    public func symbolName(for metric: MenuMetric) -> String {
+        if self == .standard { return metric.symbolName }
+        if self == .filled {
+            switch metric {
+            case .quotaRemaining: return "chart.pie.fill"
+            case .quotaUsed: return "chart.bar.fill"
+            case .credits: return "creditcard.fill"
+            case .resetCountdown: return "clock.fill"
+            case .resetTime: return "calendar.circle.fill"
+            case .availableResets: return "arrow.counterclockwise.circle.fill"
+            case .cost: return "dollarsign.circle.fill"
+            case .tokens: return "square.stack.3d.up.fill"
+            case .requests: return "arrow.up.arrow.down.square.fill"
+            case .cacheHitRate: return "bolt.fill"
+            }
+        }
+        switch metric {
+        case .quotaRemaining: return "gauge.medium"
+        case .quotaUsed: return "chart.bar"
+        case .credits: return "creditcard"
+        case .resetCountdown: return "hourglass"
+        case .resetTime: return "calendar"
+        case .availableResets: return "arrow.clockwise"
+        case .cost: return "dollarsign"
+        case .tokens: return "square.stack"
+        case .requests: return "arrow.left.arrow.right"
+        case .cacheHitRate: return "bolt.horizontal"
+        }
+    }
+}
+
 public enum AppTheme: String, Codable, CaseIterable, Identifiable, Sendable {
     case teal, ocean, forest, iris, sand, graphite
     public var id: String { rawValue }
@@ -68,4 +110,24 @@ public enum MenuIconRendering: String, Codable, CaseIterable, Identifiable, Send
     case template, original
     public var id: String { rawValue }
     public var title: String { self == .template ? "自动适配明暗" : "保留原色" }
+}
+
+public struct MenuMetricIcon: Codable, Equatable, Sendable {
+    public var style: MenuIconStyle = .automatic
+    public var size: MenuIconSize = .regular
+    public var rendering: MenuIconRendering = .template
+    public var imageData: Data?
+    public var imageName: String?
+    public init() {}
+
+    private enum CodingKeys: String, CodingKey { case style, size, rendering, imageData, imageName }
+    public init(from decoder: Decoder) throws {
+        self.init()
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        style = (try? c.decode(String.self, forKey: .style)).flatMap(MenuIconStyle.init(rawValue:)) ?? style
+        size = (try? c.decode(Int.self, forKey: .size)).flatMap(MenuIconSize.init(rawValue:)) ?? size
+        rendering = (try? c.decode(String.self, forKey: .rendering)).flatMap(MenuIconRendering.init(rawValue:)) ?? rendering
+        imageData = try? c.decode(Data.self, forKey: .imageData)
+        imageName = try? c.decode(String.self, forKey: .imageName)
+    }
 }

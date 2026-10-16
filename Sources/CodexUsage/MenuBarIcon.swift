@@ -92,25 +92,64 @@ enum MenuIconImporter {
 }
 
 enum MenuBarIcon {
-    static func image(settings: AppSettings, unread: Bool, notice: String?, hasMetrics: Bool) -> NSImage? {
-        let symbol: String
-        let description: String
-        if unread { symbol = "bell.badge.fill"; description = "有新的重置动态" }
-        else if let notice { symbol = "exclamationmark.circle"; description = notice }
-        else {
-            guard settings.menuIcon != .automatic || !hasMetrics else { return nil }
-            if settings.menuIcon == .custom, let data = settings.customMenuIcon, let image = NSImage(data: data) {
-                image.size = NSSize(width: settings.menuIconSize.rawValue, height: settings.menuIconSize.rawValue)
-                image.isTemplate = settings.menuIconRendering == .template
-                image.accessibilityDescription = "自定义 Codex 用量图标"
-                return image
-            }
-            symbol = settings.menuIcon.symbolName; description = "Codex 用量"
+    static func metricImage(for metric: MenuMetric, settings: AppSettings) -> NSImage? {
+        let configuration = settings.icon(for: metric)
+        if configuration.style == .automatic || (configuration.style == .custom && configuration.imageData.flatMap(NSImage.init(data:)) == nil) {
+            return groupImage(settings.menuIconSet, metric: metric, size: configuration.size)
         }
-        let edge = CGFloat(settings.menuIconSize.rawValue)
+        return image(configuration: configuration, defaultSymbol: settings.menuIconSet.symbolName(for: metric), description: metric.title)
+    }
+
+    /// A separate leading image is reserved for notifications or the icon-only layout.
+    static func image(settings: AppSettings, unread: Bool, notice: String?, hasMetrics: Bool) -> NSImage? {
+        if unread || notice != nil {
+            var configuration = MenuMetricIcon(); configuration.size = settings.menuIconSize
+            return symbolImage(unread ? "bell.badge.fill" : "exclamationmark.circle", size: configuration.size,
+                               description: unread ? "有新的重置动态" : notice!)
+        }
+        guard !hasMetrics else { return nil }
+        if settings.menuIcon == .automatic { return groupImage(settings.menuIconSet, metric: .quotaRemaining, size: settings.menuIconSize) }
+        var legacy = settings.defaultMenuMetricIcon
+        legacy.style = settings.menuIcon; legacy.rendering = settings.menuIconRendering
+        legacy.imageData = settings.customMenuIcon; legacy.imageName = settings.customMenuIconName
+        return image(configuration: legacy, defaultSymbol: settings.menuIconSet.symbolName(for: .quotaRemaining), description: "Codex 用量")
+    }
+
+    static func groupImage(_ set: MenuIconSet, metric: MenuMetric, size: MenuIconSize) -> NSImage? {
+        guard let symbol = symbolImage(set.symbolName(for: metric), size: size, description: metric.title,
+                                       weight: set == .minimal ? .light : .medium) else { return nil }
+        guard set == .circular else { return symbol }
+        let edge = CGFloat(size.rawValue)
+        let image = NSImage(size: NSSize(width: edge, height: edge), flipped: false) { rect in
+            NSColor.black.setStroke()
+            let ring = NSBezierPath(ovalIn: rect.insetBy(dx: 0.8, dy: 0.8)); ring.lineWidth = 1.1; ring.stroke()
+            let inset = edge * 0.23
+            let available = rect.insetBy(dx: inset, dy: inset)
+            let scale = min(available.width / symbol.size.width, available.height / symbol.size.height)
+            let width = symbol.size.width * scale, height = symbol.size.height * scale
+            symbol.draw(in: NSRect(x: rect.midX - width / 2, y: rect.midY - height / 2, width: width, height: height))
+            return true
+        }
+        image.isTemplate = true; image.accessibilityDescription = metric.title
+        return image
+    }
+
+    private static func image(configuration: MenuMetricIcon, defaultSymbol: String, description: String) -> NSImage? {
+        if configuration.style == .custom, let data = configuration.imageData, let image = NSImage(data: data) {
+            image.size = NSSize(width: configuration.size.rawValue, height: configuration.size.rawValue)
+            image.isTemplate = configuration.rendering == .template
+            image.accessibilityDescription = description
+            return image
+        }
+        let symbol = configuration.style == .automatic || configuration.style == .custom
+            ? defaultSymbol : configuration.style.symbolName
+        return symbolImage(symbol, size: configuration.size, description: description)
+    }
+
+    private static func symbolImage(_ symbol: String, size: MenuIconSize, description: String, weight: NSFont.Weight = .medium) -> NSImage? {
+        let edge = CGFloat(size.rawValue)
         guard let image = NSImage(systemSymbolName: symbol, accessibilityDescription: description)?
-            .withSymbolConfiguration(.init(pointSize: edge - 2, weight: .medium)) else { return nil }
-        // Keep wide symbols inside the same square footprint as custom icons.
+            .withSymbolConfiguration(.init(pointSize: edge - 2, weight: weight)) else { return nil }
         let scale = min(edge / max(1, image.size.width), edge / max(1, image.size.height))
         image.size = NSSize(width: image.size.width * scale, height: image.size.height * scale)
         image.isTemplate = true

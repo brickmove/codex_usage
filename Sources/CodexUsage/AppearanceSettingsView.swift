@@ -5,75 +5,119 @@ import UsageCore
 struct MenuIconSettings: View {
     @Binding var settings: AppSettings
     @Binding var error: String?
+    @Binding var target: String
     @Environment(\.appPalette) private var style
+    private var selectedMetric: MenuMetric { MenuMetric(rawValue: target) ?? .quotaRemaining }
+    private var configuration: Binding<MenuMetricIcon> {
+        Binding(get: { settings.icon(for: selectedMetric) },
+                set: { settings.setIcon($0, for: selectedMetric) })
+    }
+    private var icon: MenuMetricIcon { configuration.wrappedValue }
 
-    var body: some View {
-        Section("菜单栏图标") {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-                ForEach(MenuIconStyle.allCases.filter { $0 != .custom }) { icon in
-                    Button { settings.menuIcon = icon; error = nil } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: icon.symbolName).frame(width: 19)
-                            Text(icon.title)
-                            if settings.menuIcon == icon { Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)) }
-                        }.frame(maxWidth: .infinity, minHeight: 28)
+    @ViewBuilder var body: some View {
+        Section("图标组") {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(MenuIconSet.allCases) { set in
+                    Button { settings.selectIconSet(set); error = nil } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 12) {
+                                ForEach([MenuMetric.quotaRemaining, .credits, .resetCountdown]) { metric in
+                                    if let image = MenuBarIcon.groupImage(set, metric: metric, size: .compact) {
+                                        Image(nsImage: image).renderingMode(.template).frame(width: 20, height: 20)
+                                    }
+                                }
+                            }.accessibilityHidden(true)
+                            HStack {
+                                Text(set.title)
+                                Spacer()
+                                if settings.menuIconSet == set { Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)) }
+                            }
+                        }.frame(maxWidth: .infinity).padding(4)
                     }.buttonStyle(.bordered)
-                        .tint(settings.menuIcon == icon ? style.accent : style.secondary)
-                        .accessibilityLabel(icon.title + "图标")
-                        .accessibilityValue(settings.menuIcon == icon ? "已选择" : "未选择")
+                        .tint(settings.menuIconSet == set ? style.accent : style.secondary)
+                        .accessibilityLabel(set.title + "图标组")
+                        .accessibilityValue(settings.menuIconSet == set ? "已选择" : "未选择")
                 }
             }
-            if let data = settings.customMenuIcon, let image = NSImage(data: data) {
-                HStack(spacing: 10) {
-                    Image(nsImage: image).resizable().scaledToFit().frame(width: 28, height: 28)
-                        .padding(6).background(style.background, in: RoundedRectangle(cornerRadius: 8)).accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(settings.customMenuIconName ?? "自定义图标").lineLimit(1).truncationMode(.middle)
-                        Text(settings.menuIcon == .custom ? "正在使用 · 已保存副本" : "已保存，可随时切换")
-                            .font(.caption).foregroundStyle(style.secondary)
-                    }
-                    Spacer(minLength: 2)
-                    Button(settings.menuIcon == .custom ? "已选用" : "选用") { settings.menuIcon = .custom; error = nil }
-                        .disabled(settings.menuIcon == .custom).accessibilityLabel("选用自定义图标")
-                    Button("移除") {
-                        settings.customMenuIcon = nil; settings.customMenuIconName = nil
-                        if settings.menuIcon == .custom { settings.menuIcon = .automatic }
-                        error = nil
-                    }.accessibilityLabel("移除自定义图标")
-                }
-            } else if settings.menuIcon == .custom {
-                Label("已保存的图标无法读取，当前使用默认图标。请重新导入。", systemImage: "exclamationmark.circle")
-                    .font(.caption).foregroundStyle(.orange)
-            }
-            HStack {
-                Button(settings.customMenuIcon == nil ? "导入图片…" : "替换图片…", action: importImage)
-                Button("恢复默认图标") {
-                    settings.menuIcon = .automatic; settings.menuIconSize = .regular
-                    settings.menuIconRendering = .template
-                    settings.customMenuIcon = nil; settings.customMenuIconName = nil; error = nil
-                }
-                Spacer()
-                Text("仅保存到本机").font(.caption).foregroundStyle(style.secondary)
-            }
-            Picker("图标大小", selection: $settings.menuIconSize) {
+            Picker("整组图标大小", selection: $settings.menuIconSize) {
                 ForEach(MenuIconSize.allCases) { Text($0.title).tag($0) }
             }
-            if settings.menuIcon == .custom {
-                Picker("图标颜色", selection: $settings.menuIconRendering) {
-                    ForEach(MenuIconRendering.allCases) { Text($0.title).tag($0) }
-                }
-                Text("导入后默认保留原色。透明底单色图可切换为自动适配明暗，彩色或带底色的图片建议保留原色。")
-                    .font(.caption).foregroundStyle(style.secondary)
-            }
-            if let error {
-                Label(error, systemImage: "exclamationmark.circle").font(.caption).foregroundStyle(.orange)
-                    .fixedSize(horizontal: false, vertical: true).accessibilityLabel("图标导入失败：" + error)
-            }
-            Text("支持 PNG、JPEG、TIFF、HEIC/HEIF、PDF、ICNS，最大 10 MB、最长边 4096 px；PDF 取首页。推荐透明底方形图，32 / 36 / 40 px 可对应 Retina 尺寸，更大图片会等比缩放。")
-                .font(.caption).foregroundStyle(style.secondary).fixedSize(horizontal: false, vertical: true)
-            Text("默认沿用指标图标；选定其他样式后会在数值前常驻。未读动态或数据异常时，提示图标会临时替换所选图标。")
-                .font(.caption).foregroundStyle(style.secondary).fixedSize(horizontal: false, vertical: true)
+            Text("额度、Credits、倒计时等保留各自图形，整组统一切换风格。选择图标组时会清除单项覆盖。")
+                .font(.caption).foregroundStyle(style.secondary)
+            Button("恢复默认图标组") { settings.resetMetricIcons(); error = nil }
         }
+        Section {
+            DisclosureGroup("单独自定义指标图标（可选）") {
+                Picker("应用到", selection: $target) {
+                    ForEach(MenuMetric.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                Text("仅覆盖“\(selectedMetric.title)”的图标；选择“跟随图标组”可恢复此项。")
+                    .font(.caption).foregroundStyle(style.secondary)
+
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+                    ForEach(MenuIconStyle.allCases.filter { $0 != .custom }) { choice in
+                        Button { configuration.wrappedValue.style = choice; error = nil } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: choice.symbolName).frame(width: 19)
+                                Text(choice == .automatic ? "跟随图标组" : choice.title)
+                                if icon.style == choice { Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)) }
+                            }.frame(maxWidth: .infinity, minHeight: 28)
+                        }.buttonStyle(.bordered)
+                            .tint(icon.style == choice ? style.accent : style.secondary)
+                            .accessibilityLabel(selectedMetric.title + (choice == .automatic ? "跟随图标组" : choice.title + "图标"))
+                            .accessibilityValue(icon.style == choice ? "已选择" : "未选择")
+                    }
+                }
+                if let data = icon.imageData, let image = NSImage(data: data) {
+                    HStack(spacing: 10) {
+                        Image(nsImage: image).resizable().scaledToFit().frame(width: 28, height: 28)
+                            .padding(6).background(style.background, in: RoundedRectangle(cornerRadius: 8)).accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(icon.imageName ?? "自定义图标").lineLimit(1).truncationMode(.middle)
+                            Text(icon.style == .custom ? "正在使用 · 已保存副本" : "已保存，可随时切换")
+                                .font(.caption).foregroundStyle(style.secondary)
+                        }
+                        Spacer(minLength: 2)
+                        Button(icon.style == .custom ? "已选用" : "选用") { configuration.wrappedValue.style = .custom; error = nil }
+                            .disabled(icon.style == .custom).accessibilityLabel("选用自定义图标")
+                        Button("移除") {
+                            var updated = icon; updated.imageData = nil; updated.imageName = nil
+                            if updated.style == .custom { updated.style = .automatic }
+                            configuration.wrappedValue = updated; error = nil
+                        }.accessibilityLabel("移除自定义图标")
+                    }
+                } else if icon.style == .custom {
+                    Label("已保存的图标无法读取，当前使用默认图标。请重新导入。", systemImage: "exclamationmark.circle")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+                HStack {
+                    Button(icon.imageData == nil ? "导入图片…" : "替换图片…", action: importImage)
+                    Button("跟随图标组") {
+                        settings.metricIcons.removeValue(forKey: selectedMetric.rawValue); error = nil
+                    }
+                    Spacer()
+                    Text("仅保存到本机").font(.caption).foregroundStyle(style.secondary)
+                }
+                Picker("图标大小", selection: configuration.size) {
+                    ForEach(MenuIconSize.allCases) { Text($0.title).tag($0) }
+                }
+                if icon.style == .custom {
+                    Picker("图标颜色", selection: configuration.rendering) {
+                        ForEach(MenuIconRendering.allCases) { Text($0.title).tag($0) }
+                    }
+                    Text("导入后默认保留原色。透明底单色图可切换为自动适配明暗，彩色或带底色的图片建议保留原色。")
+                        .font(.caption).foregroundStyle(style.secondary)
+                }
+                if let error {
+                    Label(error, systemImage: "exclamationmark.circle").font(.caption).foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true).accessibilityLabel("图标导入失败：" + error)
+                }
+                Text("支持 PNG、JPEG、TIFF、HEIC/HEIF、PDF、ICNS，最大 10 MB、最长边 4096 px；PDF 取首页。推荐透明底方形图，32 / 36 / 40 px 可对应 Retina 尺寸，更大图片会等比缩放。")
+                    .font(.caption).foregroundStyle(style.secondary).fixedSize(horizontal: false, vertical: true)
+                Text("单项覆盖只用于个别自定义图片或样式；通常只需选择上方图标组。未读动态和数据异常独立提示，保留各指标图标。")
+                    .font(.caption).foregroundStyle(style.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }.onChange(of: target) { _, _ in error = nil }
     }
 
     private func importImage() {
@@ -87,11 +131,10 @@ struct MenuIconSettings: View {
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             do {
                 let imported = try MenuIconImporter.read(url)
-                settings.customMenuIcon = imported.pngData
-                settings.customMenuIconName = String(url.lastPathComponent.prefix(120))
-                settings.menuIconRendering = .original
-                settings.menuIcon = .custom
-                error = nil
+                var updated = icon
+                updated.imageData = imported.pngData; updated.imageName = String(url.lastPathComponent.prefix(120))
+                updated.rendering = .original; updated.style = .custom
+                configuration.wrappedValue = updated; error = nil
             } catch { self.error = error.localizedDescription }
         }
         if let window = NSApp.keyWindow { panel.beginSheetModal(for: window, completionHandler: completion) }
