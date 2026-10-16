@@ -1,0 +1,16 @@
+.DS_Store
+.build/
+DerivedData/
+build/
+dist/
+*.xcuserstate
+xcuserdata/
+.swiftpm/
+.env
+.env.*
+!.env.example
+*.db
+*.db-wal
+*.db-shm
+auth.json
+*_auth.json
