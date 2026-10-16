@@ -12,7 +12,7 @@
 
 隔离 QA App 使用同一二进制、独立 bundle ID 和 `--demo`，不保存偏好、不查账户。真实原生 AX / 截图确认三页选中状态、有效额度的绝对重置日期、四类 Token 完整数值/份额和账户归属说明；设置的三分类可达，新增 Token 跨页仍保留草稿，取消恢复原 3 项；仅图标、添加 Token/请求数并上移请求、保存后重开保持顺序；恢复全部默认后取消仍恢复已保存 2 项。最终版本另验证日期倒置时就地及全局错误出现、保存禁用，切分类错误仍在，修正日期后提示消失且保存恢复可用。所有这些操作仅改变 QA 内存状态，未覆盖用户生产偏好。
 
-本地 0.4.0 / build 7 arm64 安装包通过 SHA-256、包内 plist、codesign；解包应用文件与构建产物逐项哈希一致，载荷仅应用二进制、图标、plist、签名、第三方声明。shell / plist / Workflow YAML 与各 run 段 bash 语法通过。基线 v0.3.3 Release 双附件已公开下载验证；下版本的最终公开下载结果在 [交付记录](../proc/0.4.0-product-polish/summary.md) 补记。
+本地 0.4.0 / build 7 arm64 安装包通过 SHA-256、包内 plist、codesign；解包应用文件与构建产物逐项哈希一致，载荷仅应用二进制、图标、plist、签名、第三方声明。shell / plist / Workflow YAML 与各 run 段 bash 语法通过。基线 v0.3.3 Release 双附件已公开下载验证；0.4.0 正式 Release 的公开双附件同样已下载并通过 SHA-256、版本、架构和应用签名验证，详见 [交付记录](../proc/0.4.0-product-polish/summary.md)。
 
 本轮 UI/UX/UE 手工适配评级 B：核心原生流程和 AX 树已验证，未完成 VoiceOver 连续朗读、外接屏/缩放显示实机切换、旧 macOS/Intel 或真实硬件睡眠试验。保留 arm64、ad-hoc、未公证的分发限制，不将模型层测试或 PNG 替代为实机证明。
 

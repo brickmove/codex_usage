@@ -1,6 +1,6 @@
 # 技能应用记录
 
-枚举基线：43 个 SKILL.md；本轮选用 28 项，不适用/重复 15 项。已执行项有下列实际产出，发布的最终公开附件核验将在 summary.md 补记。
+枚举基线：43 个 SKILL.md；本轮选用 28 项，不适用/重复 15 项。已执行项有下列实际产出，两个正式版本的公开附件均已下载核验，结果见 summary.md。
 
 来源：`/Users/yuxiang/mygit/skills/<名称>/SKILL.md`，优先采用用户指定技能库。归档 commands 为详细后备说明。
 
@@ -22,7 +22,7 @@
 | code-audit | 已执行 | des-review.md 首轮缺陷与最终复审；确认 P0/P1/P2 未关闭项为 0 |
 | code-review | 已执行 | 两位独立审查者复核源码/测试/资源指纹 ef6662c…，确认阻断项为 0 |
 | codex-workflow | 不适用 | 用于旧 Claude 工作流迁移，本次消费外部技能而非迁移其整套治理设施。 |
-| commit-split | 已执行 | 按授权分组：发布基础设施 12c0aa3、产品实现 7d98837 已推送；本组交付记录随后推送 |
+| commit-split | 已执行 | 按授权分组：发布基础设施 12c0aa3、产品实现 7d98837 已推送；交付记录 3f00276 已推送；公开发布证据另作本次补录 |
 | constitution | 不适用 | 没有修改项目章程的目标；本次遵循用户约束，不附带建立跨项目治理。 |
 | context-pack | 已执行 | 最小上下文：会话规则、README、Package.swift、Sources/Tests、数据源文档 |
 | des-design | 已执行 | ../../design/0.4.0-product-polish/framework.md 与两个 page 文件 |
@@ -64,4 +64,4 @@
 
 源码/测试/资源最终指纹：`ef6662c61006603030e39acebdc480858309d7d742d4eb3d19291fdf169a3491`；实际 reviewer：`/root/product_audit` 与 `/root/runtime_audit`，均独立复算并只读审查，非实现者。实现任务的测试文件由 `/root/plan_tasks` 串行有界写入后交回主代理；其后主代理才恢复源码写入。原归档的派发校验脚本不存在，采用实际工具回执和指纹，不把 planning 校验冒充 agent 执行。
 
-28 项适用技能的实际执行已覆盖；15 项不适用仍保留，不改成“通过”。本轮 UI/UX/UE 评级 B（原生手工适配），Runtime/Data/Security 以对应测试、只读不变和独立审查为证据；硬件睡眠、VoiceOver 连续朗读、多屏切换、旧系统/Intel/公证保留未实测边界。公开发布的最终下载核验见 summary.md。
+28 项适用技能的实际执行已覆盖；15 项不适用仍保留，不改成“通过”。本轮 UI/UX/UE 评级 B（原生手工适配），Runtime/Data/Security 以对应测试、只读不变和独立审查为证据；硬件睡眠、VoiceOver 连续朗读、多屏切换、旧系统/Intel/公证保留未实测边界。公开发布的最终下载核验通过，见 summary.md。
