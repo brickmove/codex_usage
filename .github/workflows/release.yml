@@ -1,0 +1,80 @@
+name: 发布 macOS 安装包
+
+on:
+  push:
+    tags: ['v*']
+    branches: ['release/v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 已存在的版本标签（例如 v0.3.3）
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: 确认标签与独立源码目录
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          release_tag="${INPUT_TAG:-${GITHUB_REF_NAME#release/}}"
+          [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo '仅接受 vX.Y.Z 标签'; exit 1; }
+          git rev-parse --verify "refs/tags/$release_tag^{commit}"
+          source_dir="$RUNNER_TEMP/release-source"
+          git worktree add --detach "$source_dir" "refs/tags/$release_tag"
+          version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$source_dir/Resources/Info.plist")
+          [[ "v$version" == "$release_tag" ]] || { echo '应用版本与标签不一致'; exit 1; }
+          [[ "$(uname -m)" == arm64 ]] || { echo '发布环境必须为 Apple Silicon'; exit 1; }
+          test -f "docs/releases/$release_tag.md"
+          echo "RELEASE_TAG=$release_tag" >> "$GITHUB_ENV"
+          echo "RELEASE_SOURCE=$source_dir" >> "$GITHUB_ENV"
+          echo "PACKAGE_NAME=Codex-Usage-$version-arm64.pkg" >> "$GITHUB_ENV"
+      - name: 测试基线源码
+        run: swift test --package-path "$RELEASE_SOURCE"
+      - name: 构建并校验安装包
+        run: |
+          set -euo pipefail
+          "$RELEASE_SOURCE/scripts/package-app.sh"
+          cd "$RELEASE_SOURCE/dist"
+          shasum -a 256 -c "$PACKAGE_NAME.sha256"
+          pkgutil --expand-full "$PACKAGE_NAME" "$RUNNER_TEMP/expanded-package"
+          app=$(find "$RUNNER_TEMP/expanded-package" -type d -name 'Codex Usage.app' -print -quit)
+          test -n "$app"
+          codesign --verify --deep --strict "$app"
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")" == "${RELEASE_TAG#v}" ]]
+      - name: 发布 Release 与附件
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # 已有正式发布保持原样，防止重跑覆盖用户下载到的版本。
+          if gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' > "$RUNNER_TEMP/release-draft-state" 2>/dev/null; then
+            [[ "$(cat "$RUNNER_TEMP/release-draft-state")" == true ]] || { echo '该版本已正式发布，不覆盖附件'; exit 1; }
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft \
+              --title "$RELEASE_TAG — $(head -1 "docs/releases/$RELEASE_TAG.md" | sed 's/^# v[0-9.]* — //')" \
+              --notes-file "docs/releases/$RELEASE_TAG.md"
+          fi
+          gh release upload "$RELEASE_TAG" \
+            "$RELEASE_SOURCE/dist/$PACKAGE_NAME" \
+            "$RELEASE_SOURCE/dist/$PACKAGE_NAME.sha256" --clobber
+          gh release edit "$RELEASE_TAG" --draft=false --latest
+          gh release view "$RELEASE_TAG" --json url,tagName,isDraft,assets
