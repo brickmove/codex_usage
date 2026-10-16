@@ -126,6 +126,8 @@ shasum -a 256 -c Codex-Usage-0.5.0-arm64.pkg.sha256
 
 ## 文档与参与
 
+- [总体方案 SPEC-1.0](docs/product-plan.md)：当前完整产品要求、架构、数据契约与完成条件。
+- [模型重建对比实验](docs/experiments/model-comparison.md)：本地与云端模型的统一输入、隔离方式和评分规则。
 - [使用指南](docs/user-guide.md)：显示项目、刷新设置、统计同步、账户与重置动态。
 - [开发指南](docs/development.md)：源码构建、打包、诊断、测试与截图复现。
 - [验证记录](docs/verification.md)：主分支 125 项应用测试与 9 项发布规则测试、原生界面检查及未实测边界。

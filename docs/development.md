@@ -2,6 +2,8 @@
 
 [返回首页](../README.md) · [使用指南](user-guide.md) · [验证记录](verification.md)
 
+完整产品范围与冻结数据契约见 [总体方案 SPEC-1.0](product-plan.md)；从空目录比较本地与云端模型见 [实验说明](experiments/model-comparison.md)。`proc/0.4.0-product-polish` 为历史阶段方案，不代替当前总体方案。
+
 ## 环境与结构
 
 需要 macOS 14+、Xcode 命令行工具和 Swift 5.9+。本机验证使用 Apple Silicon、Swift 6.4 和 macOS 27 SDK；部署目标为 macOS 14，旧系统与 Intel 未实机验证。项目使用 SwiftPM，无第三方 Swift 包依赖。

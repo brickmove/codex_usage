@@ -128,6 +128,8 @@ Local historical statistics are not guaranteed to be separated by ChatGPT accoun
 
 The detailed guides and release notes below are currently in Simplified Chinese.
 
+- [Overall specification SPEC-1.0](docs/product-plan.md): complete product requirements, architecture, data contracts, and acceptance criteria.
+- [Model comparison experiment](docs/experiments/model-comparison.md): identical inputs, isolated rebuilds, and scoring for local and cloud models.
 - [User guide](docs/user-guide.md): display metrics, refresh settings, statistics sync, accounts, and reset news.
 - [Development guide](docs/development.md): building, packaging, diagnostics, tests, and reproducing screenshots.
 - [Verification record](docs/verification.md): 125 app tests and 9 release-policy tests on main, native interface checks, and areas not yet tested.
