@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "source": "workflow-selectors (manual native adaptation)",
+  "status": "local-verification-passed",
+  "summary": "28 项适用技能已执行；106 项回归、原生交互、独立源码复审及本地包验证通过，等待版本公开下载核验",
+  "gateResults": [
+    {
+      "gate": "UIUXUE",
+      "status": "B (manual native adaptation)"
+    },
+    {
+      "gate": "Runtime",
+      "status": "passed-with-stated-limits"
+    },
+    {
+      "gate": "Data",
+      "status": "passed"
+    },
+    {
+      "gate": "Security",
+      "status": "passed"
+    }
+  ],
+  "checks": [
+    {
+      "name": "swift test (106)",
+      "status": "passed"
+    },
+    {
+      "name": "native previews (14)",
+      "status": "passed"
+    },
+    {
+      "name": "native QA interaction",
+      "status": "passed"
+    },
+    {
+      "name": "independent code review (2)",
+      "status": "passed"
+    },
+    {
+      "name": "package/signature/SHA-256",
+      "status": "passed"
+    },
+    {
+      "name": "docs links + traceability",
+      "status": "passed"
+    },
+    {
+      "name": "shell/plist/workflow syntax",
+      "status": "passed"
+    }
+  ],
+  "findings": [],
+  "residualRisks": [
+    "旧 macOS / Intel / 公证 / 真实硬件睡眠未验证"
+  ],
+  "warnings": [
+    "原归档 helper / envelope validator 不存在；本 JSON 为手工归一记录，未声称通过缺失校验器"
+  ],
+  "nextDecision": "提交交付记录后标记 v0.4.0，由发布流程构建并核验公开附件",
+  "raw": {
+    "context": [
+      "用户会话语言/权限与原生需求",
+      "README.md",
+      "Package.swift",
+      "Sources",
+      "Tests",
+      "docs/data-sources.md",
+      "docs/reset-news.md"
+    ],
+    "domain": "not-applicable: 无受监管行业业务链",
+    "verification": "verification-plan.md",
+    "helpersAvailable": false
+  }
+}
