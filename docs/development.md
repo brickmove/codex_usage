@@ -58,7 +58,7 @@ python3 scripts/verify-statistics.py
 - `--diagnose-news` 遵守新闻缓存与最短请求间隔。
 - `verify-statistics.py` 只读源库，在临时目录复制必要统计列，以同一快照对照 CC Switch 参考查询，完成后删除副本；不复制供应商配置或凭据。
 
-0.4.0 的 106 项测试、原生交互和安装包检查结果见 [验证记录](verification.md)。
+0.5.0 的 118 项测试、原生交互和安装包检查结果见 [验证记录](verification.md)。
 
 ## 隔离示例与界面截图
 
@@ -70,12 +70,13 @@ swift run CodexUsage --preview build/overview-dark.png --dark
 swift run CodexUsage --preview-analysis build/analysis-light.png
 swift run CodexUsage --preview-settings build/settings-menu.png
 swift run CodexUsage --preview-settings build/settings-data.png --section data
+swift run CodexUsage --preview-settings build/settings-appearance.png --section appearance --theme iris --appearance dark
 swift run CodexUsage --preview-news build/reset-news.png
 ```
 
-示例模式不查询账户，也不保存设置。预览可用 `--stale`、`--empty`、`--failed`、`--unsynced`、`--invalid-range`、`--compact-panel` 检查状态。生成截图后须人工检查布局、示例标识和隐私；offscreen 截图不替代真实控件交互或辅助功能验收。
+示例模式不查询账户，也不保存设置。示例和预览支持 `--theme teal|ocean|forest|iris|sand|graphite` 与 `--appearance system|light|dark`；`--dark` 保留为预览深色模式的快捷参数。预览可用 `--stale`、`--empty`、`--failed`、`--unsynced`、`--invalid-range`、`--compact-panel` 检查状态。生成截图后须人工检查布局、示例标识和隐私；offscreen 截图不替代真实控件交互或辅助功能验收。
 
-README 截图的版本、来源及复现方式见 [截图说明](images/screenshots/0.4.0/README.md)。`build/` 中的全部 QA 输出保持忽略，仅将筛选的文档资产放入 `docs/images/`；不使用 `git add -f`。临时 QA 应用和安装包解包目录也应放在 `.noindex` 目录内，避免在 Spotlight 中形成重复应用入口；使用后注销其 LaunchServices 注册。
+README 截图的版本、来源及复现方式见 [截图说明](images/screenshots/0.5.0/README.md)。`build/` 中的全部 QA 输出保持忽略，仅将筛选的文档资产放入 `docs/images/`；不使用 `git add -f`。临时 QA 应用和安装包解包目录也应放在 `.noindex` 目录内，避免在 Spotlight 中形成重复应用入口；使用后注销其 LaunchServices 注册。
 
 ## 发布流程
 

@@ -4,6 +4,7 @@ import UsageCore
 /// 概览与分析共用来源、范围和错误状态；分析不发起第二套查询。
 struct StatisticsSection: View {
     @ObservedObject var model: AppModel
+    @Environment(\.appPalette) private var style
     let analysis: Bool
     @Binding var customStart: Date
     @Binding var customEnd: Date
@@ -28,11 +29,11 @@ struct StatisticsSection: View {
                 if analysis {
                     if unavailable {
                         Label(model.statisticsError != nil ? "统计暂不可用，重新读取后查看构成。" : "等待 CC Switch 同步后查看构成。", systemImage: "chart.bar.xaxis")
-                            .font(.callout).foregroundStyle(.secondary).padding(.vertical, 16)
+                            .font(.callout).foregroundStyle(style.secondary).padding(.vertical, 16)
                     } else { tokenBreakdown(stats) }
                 } else { metrics(stats, unavailable: unavailable) }
                 if stats.totalRequests == 0 && !unavailable && !analysis {
-                    Text("此时段暂无用量记录").font(.caption).foregroundStyle(.secondary)
+                    Text("此时段暂无用量记录").font(.caption).foregroundStyle(style.secondary)
                 }
                 if stats.archiveBoundaryOmitted {
                     Label("范围边界含已归档数据，仅计入完整日期。", systemImage: "info.circle")
@@ -40,22 +41,22 @@ struct StatisticsSection: View {
                 }
                 // 归属与异常必须常显，只有正常来源的时间细节可折叠。
                 Text("本机 Codex 记录 · CC Switch")
-                    .font(.system(size: 11)).foregroundStyle(.secondary)
+                    .font(.system(size: 11)).foregroundStyle(style.secondary)
                     .help("本机历史不保证按 ChatGPT 账户拆分，与概览的当前账户额度独立。")
-                if analysis { Text("本机历史不保证属于当前登录账户。").font(.system(size: 11)).foregroundStyle(.secondary) }
+                if analysis { Text("本机历史不保证属于当前登录账户。").font(.system(size: 11)).foregroundStyle(style.secondary) }
                 DisclosureGroup("来源详情") {
                     VStack(alignment: .leading, spacing: 5) {
                         if let range = stats.queriedRange { Text("已查询 " + fullDate(range.start) + " – " + fullDate(range.end)) }
                         if let date = stats.lastSyncedAt {
                             Text("会话同步 " + fullDate(date))
-                                .foregroundStyle(model.statisticsSyncState == .current ? Color.secondary : Color.orange)
+                                .foregroundStyle(model.statisticsSyncState == .current ? style.secondary : Color.orange)
                         } else { Text("会话同步时间未知") }
                         if let date = stats.latestRecordAt { Text("最近请求 " + fullDate(date)) }
                         Text("本次读取 " + shortTime(stats.readAt) + " · 费用来自 CC Switch")
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(.top, 6)
-                }.font(.system(size: 11)).foregroundStyle(.secondary)
+                }.font(.system(size: 11)).foregroundStyle(style.secondary)
             } else if model.loadingStatistics {
-                HStack { ProgressView().controlSize(.small); Text("正在读取 CC Switch…") }.font(.callout).foregroundStyle(.secondary).padding(.vertical, 12)
+                HStack { ProgressView().controlSize(.small); Text("正在读取 CC Switch…") }.font(.callout).foregroundStyle(style.secondary).padding(.vertical, 12)
             }
         }
     }
@@ -67,9 +68,9 @@ struct StatisticsSection: View {
             if let error = rangeError { Label(error, systemImage: "exclamationmark.circle").foregroundStyle(.orange) }
             HStack { Spacer(); Button("应用范围") { model.setCustomRange(start: customStart, end: customEnd) }.disabled(rangeError != nil).controlSize(.small) }
             Text("编辑后点击“应用范围”。下方数据仍对应已应用的时段。")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(style.secondary)
             if let range = model.statistics?.queriedRange {
-                Text("已应用 " + fullDate(range.start) + " – " + fullDate(range.end)).foregroundStyle(.secondary)
+                Text("已应用 " + fullDate(range.start) + " – " + fullDate(range.end)).foregroundStyle(style.secondary)
             }
         }.font(.system(size: 11)).padding(10).panelCard()
     }
@@ -83,7 +84,7 @@ struct StatisticsSection: View {
                     Button(model.statisticsSourceRunning ? "查看 CC Switch" : "打开 CC Switch 同步", action: model.openStatisticsSource)
                     Button("重新读取", action: model.refreshStatistics)
                 }.controlSize(.small)
-            }.font(.system(size: 11)).foregroundStyle(.secondary)
+            }.font(.system(size: 11)).foregroundStyle(style.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading).padding(12)
                 .background(Color.orange.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
         }
@@ -100,7 +101,7 @@ struct StatisticsSection: View {
 
     private func metric(_ label: String, value: String, symbol: String, hint: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(label, systemImage: symbol).font(.system(size: 11)).foregroundStyle(.secondary)
+            Label(label, systemImage: symbol).font(.system(size: 11)).foregroundStyle(style.secondary)
             Text(value).font(.system(size: 23, weight: .semibold, design: .rounded)).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(0.65)
         }.frame(maxWidth: .infinity, alignment: .leading).padding(12).panelCard()
@@ -110,7 +111,7 @@ struct StatisticsSection: View {
     private func tokenBreakdown(_ stats: UsageSummary) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("全部 Token").font(.system(size: 11)).foregroundStyle(.secondary)
+                Text("全部 Token").font(.system(size: 11)).foregroundStyle(style.secondary)
                 Text(DisplayFormat.compact(Double(stats.realTotalTokens)))
                     .font(.system(size: 32, weight: .semibold, design: .rounded)).monospacedDigit()
                     .help(DisplayFormat.number(Double(stats.realTotalTokens), digits: 0) + " Tokens")
@@ -123,7 +124,7 @@ struct StatisticsSection: View {
                         }
                     }.clipShape(Capsule())
                 }.frame(height: 10).accessibilityHidden(true)
-            } else { Text("此时段暂无 Token 记录").font(.callout).foregroundStyle(.secondary) }
+            } else { Text("此时段暂无 Token 记录").font(.callout).foregroundStyle(style.secondary) }
             VStack(spacing: 12) {
                 ForEach(stats.tokenBreakdown) { item in
                     let share = item.fraction.map { DisplayFormat.number($0 * 100, digits: 1) + "%" } ?? "—"
@@ -132,14 +133,14 @@ struct StatisticsSection: View {
                         Text(item.kind.title).font(.system(size: 12))
                         Spacer()
                         Text(DisplayFormat.compact(Double(item.tokens))).font(.system(size: 13, weight: .medium)).monospacedDigit()
-                        Text(share).font(.system(size: 11)).monospacedDigit().foregroundStyle(.secondary).frame(width: 48, alignment: .trailing)
+                        Text(share).font(.system(size: 11)).monospacedDigit().foregroundStyle(style.secondary).frame(width: 48, alignment: .trailing)
                     }.accessibilityElement(children: .ignore)
                         .accessibilityLabel(item.kind.title + "，" + DisplayFormat.number(Double(item.tokens), digits: 0) + " Tokens，占全部 Token " + share)
                         .help(DisplayFormat.number(Double(item.tokens), digits: 0) + " Tokens")
                 }
             }
             Text("份额按全部 Token 计算，包含输出；概览中的缓存命中率仅按输入计算。")
-                .font(.system(size: 11)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .font(.system(size: 11)).foregroundStyle(style.secondary).fixedSize(horizontal: false, vertical: true)
         }.padding(16).panelCard()
     }
 
@@ -148,7 +149,7 @@ struct StatisticsSection: View {
         case .freshInput: return .blue
         case .output: return .purple
         case .cacheWrite: return .orange
-        case .cacheRead: return AppStyle.accent
+        case .cacheRead: return style.accent
         }
     }
 }

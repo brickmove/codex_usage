@@ -26,20 +26,21 @@ A native SwiftUI / AppKit menu bar app that uses your existing Codex sign-in and
 <table>
   <tr><th>Light appearance</th><th>Dark appearance</th></tr>
   <tr>
-    <td align="center"><a href="docs/images/screenshots/0.4.0/overview-light.png"><img src="docs/images/screenshots/0.4.0/overview-light.png" width="360" alt="Light overview with a sample account, weekly limit, Credits, and four usage metrics"></a></td>
-    <td align="center"><a href="docs/images/screenshots/0.4.0/overview-dark.png"><img src="docs/images/screenshots/0.4.0/overview-dark.png" width="360" alt="Dark overview showing the same sample account limits and usage metrics"></a></td>
+    <td align="center"><a href="docs/images/screenshots/0.5.0/overview-light.png"><img src="docs/images/screenshots/0.5.0/overview-light.png" width="360" alt="Light overview with a sample account, weekly limit, Credits, and four usage metrics"></a></td>
+    <td align="center"><a href="docs/images/screenshots/0.5.0/overview-dark.png"><img src="docs/images/screenshots/0.5.0/overview-dark.png" width="360" alt="Dark overview with the Iris theme, sample account limits, and usage metrics"></a></td>
   </tr>
 </table>
 
-*Screenshots show the native 0.4.0 interface in Simplified Chinese. All accounts, usage, and news shown are sample data, not real account data or official announcements. Click an image to view it at full size.*
+*Screenshots show the native 0.5.0 interface in Simplified Chinese. All accounts, usage, and news shown are sample data, not real account data or official announcements. Click an image to view it at full size.*
 
 ## Features
 
 | What you want to know | What Codex Usage shows |
 | --- | --- |
 | How much capacity is left | Weekly and other limit windows, Credits, automatic reset times, and available resets |
-| What appears in the menu bar | Choose and reorder metrics, or show only the icon; hover for full metric names and time ranges |
+| What appears in the menu bar | Choose metrics, drag to reorder, or show only the icon; hover for full metric names and time ranges |
 | How much you used in a time range | Stored cost, token usage, request count, and cache hit rate; defaults to today, with other ranges available |
+| How to customize the look | Built-in or imported menu bar icons in three sizes; six themes with independent System, Light, and Dark modes |
 | Where tokens went | New input, output, cache writes, and cache hits, with counts and shares |
 | Whether there is reset news | A dedicated news tab, source links, and an optional unread indicator in the menu bar |
 | Whether the data is current | Distinct states for expired data, pending sync, and actual zero usage; automatic refresh across midnight and after wake |
@@ -47,16 +48,24 @@ A native SwiftUI / AppKit menu bar app that uses your existing Codex sign-in and
 <table>
   <tr><th>Token analysis</th><th>Reset news</th></tr>
   <tr>
-    <td align="center"><a href="docs/images/screenshots/0.4.0/analysis-light.png"><img src="docs/images/screenshots/0.4.0/analysis-light.png" width="360" alt="Token analysis with four categories, counts, shares, and an explanation of the calculation denominator"></a></td>
-    <td align="center"><a href="docs/images/screenshots/0.4.0/reset-news.png"><img src="docs/images/screenshots/0.4.0/reset-news.png" width="360" alt="Sample reset forecasts and confirmation records with Beijing time and source links"></a></td>
+    <td align="center"><a href="docs/images/screenshots/0.5.0/analysis-light.png"><img src="docs/images/screenshots/0.5.0/analysis-light.png" width="360" alt="Token analysis with four categories, counts, shares, and an explanation of the calculation denominator"></a></td>
+    <td align="center"><a href="docs/images/screenshots/0.5.0/reset-news.png"><img src="docs/images/screenshots/0.5.0/reset-news.png" width="360" alt="Sample reset forecasts and confirmation records with Beijing time and source links"></a></td>
   </tr>
 </table>
 
 <details>
 <summary>Customize the menu bar</summary>
 
-<p>Select the metrics you need and use the up/down arrows to reorder them. The preview updates as you edit. Settings are grouped into menu bar, data and refresh, and reset news. Cancel discards your draft; Save applies it.</p>
-<p align="center"><a href="docs/images/screenshots/0.4.0/settings-menu.png"><img src="docs/images/screenshots/0.4.0/settings-menu.png" width="520" alt="Menu bar settings with an icon and value preview, metric selection, ordering, and Save and Cancel controls"></a></p>
+<p>Select the metrics you need, then drag their handles or use the up/down arrows to reorder them. The preview updates as you edit. Import a menu bar icon or choose one of six themes in Appearance. Cancel discards your draft; Save applies it.</p>
+<p align="center"><a href="docs/images/screenshots/0.5.0/settings-menu.png"><img src="docs/images/screenshots/0.5.0/settings-menu.png" width="520" alt="Menu bar settings with icon import, built-in styles, size selection, and a live preview"></a></p>
+
+</details>
+
+<details>
+<summary>Explore six color themes</summary>
+
+<p>Teal, Ocean, Forest, Iris, Sand, and Graphite each support light and dark appearances, or follow your system. Themes apply to panel backgrounds, cards, text, and accent colors.</p>
+<p align="center"><a href="docs/images/screenshots/0.5.0/settings-appearance.png"><img src="docs/images/screenshots/0.5.0/settings-appearance.png" width="520" alt="Appearance settings with six themes, light and dark modes, and an immediate preview"></a></p>
 
 </details>
 
@@ -80,10 +89,10 @@ A native SwiftUI / AppKit menu bar app that uses your existing Codex sign-in and
 
 **Distribution status:** The app is ad-hoc signed. The installer does not yet have a Developer ID Installer signature or Apple notarization, so Gatekeeper may restrict installation on another Mac. Intel installers and automatic updates are not currently available. Quit the existing app before installing an update; your settings are preserved.
 
-Each release includes a SHA-256 checksum file. For 0.4.0, place both files in the same directory and run:
+Each release includes a SHA-256 checksum file. For 0.5.0, place both files in the same directory and run:
 
 ```bash
-shasum -a 256 -c Codex-Usage-0.4.0-arm64.pkg.sha256
+shasum -a 256 -c Codex-Usage-0.5.0-arm64.pkg.sha256
 ```
 
 ## Data sources and privacy
@@ -94,7 +103,7 @@ shasum -a 256 -c Codex-Usage-0.4.0-arm64.pkg.sha256
 | Cost, tokens, requests, and cache hit rate | CC Switch local SQLite database | Read-only queries; cost is summed from stored amounts, without recalculating model pricing |
 | Reset news | [AIHOT's Tibo reset monitor](https://aihot.news/codex-reset) | Third-party information; estimated windows and confirmation post times do not establish when a reset reaches your account |
 
-The app does not read authentication files directly or store OAuth credentials. Account display information stays in memory. Settings store only paths, time ranges, and display preferences. Release packages contain no personal databases, sign-in credentials, or user settings.
+The app does not read authentication files directly or store OAuth credentials. Account display information stays in memory. Settings store paths, time ranges, display and appearance preferences, and a local copy of your imported icon. Icons are not uploaded. Release packages contain no personal databases, sign-in credentials, or user settings.
 
 Local historical statistics are not guaranteed to be separated by ChatGPT account. Showing the current account does not mean that all history belongs to it. Reported cost also does not represent subscription payments or Credits deductions. See [data source details](docs/data-sources.md) (Simplified Chinese) for field mappings, deduplication, and archive handling.
 
@@ -119,8 +128,8 @@ The detailed guides and release notes below are currently in Simplified Chinese.
 
 - [User guide](docs/user-guide.md): display metrics, refresh settings, statistics sync, accounts, and reset news.
 - [Development guide](docs/development.md): building, packaging, diagnostics, tests, and reproducing screenshots.
-- [Verification record](docs/verification.md): 106 tests, native interface checks, and areas not yet tested.
+- [Verification record](docs/verification.md): 118 tests, native interface checks, and areas not yet tested.
 - [Reset news protocol](docs/reset-news.md) · [Third-party notices](THIRD_PARTY_NOTICES.md).
-- [Releases and installers](https://github.com/brickmove/codex_usage/releases): [v0.4.0](docs/releases/v0.4.0.md) · [v0.3.3](https://github.com/brickmove/codex_usage/releases/tag/v0.3.3).
+- [Releases and installers](https://github.com/brickmove/codex_usage/releases): [v0.5.0](docs/releases/v0.5.0.md) · [v0.4.0](docs/releases/v0.4.0.md) · [v0.3.3](https://github.com/brickmove/codex_usage/releases/tag/v0.3.3).
 
 Feedback and contributions are welcome through [Issues](https://github.com/brickmove/codex_usage/issues). Include the app version, macOS version, reproduction steps, and redacted error messages. Do not upload authentication files, complete databases, or screenshots containing real account information.

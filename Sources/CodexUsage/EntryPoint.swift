@@ -15,8 +15,9 @@ struct CodexUsageMain {
                        [--database PATH] [--codex-path PATH] [--codex-home PATH]
             --preview OUTPUT.png [--dark] [--unsynced] [--stale] [--compact-panel]：导出示例预览
             --preview-analysis OUTPUT.png [--dark] [--empty] [--failed]：导出 Token 构成预览
-            --preview-settings OUTPUT.png [--dark] [--section menu|data|news]：导出设置预览
+            --preview-settings OUTPUT.png [--dark] [--section menu|appearance|data|news]：导出设置预览
             --demo [--settings]：运行隔离示例界面，不保存设置或查询账户
+            示例与预览还支持 --theme teal|ocean|forest|iris|sand|graphite 和 --appearance system|light|dark
             --preview-news OUTPUT.png [--dark]：导出重置动态示例预览
             --diagnose-news：检查 AIHOT 重置动态（遵守缓存与检查间隔）
             --diagnose-wake：模拟唤醒恢复，输出可用状态，不输出邮箱或凭据
@@ -32,7 +33,12 @@ struct CodexUsageMain {
             catch { fputs("预览失败：\(error.localizedDescription)\n", stderr); exit(1) }
             return
         }
-        let delegate = AppDelegate(model: args.contains("--demo") ? AppModel.previewModel() : AppModel()); app.delegate = delegate
+        let model = args.contains("--demo") ? AppModel.previewModel() : AppModel()
+        if model.isPreview {
+            do { try configureAppearance(args: args, model: model) }
+            catch { fputs("\(error.localizedDescription)\n", stderr); exit(1) }
+        }
+        let delegate = AppDelegate(model: model); app.delegate = delegate
         withExtendedLifetime(delegate) { app.run() }
     }
 
@@ -153,6 +159,8 @@ struct CodexUsageMain {
     @MainActor private static func preview(path: String, args: [String]) throws {
         let dark = args.contains("--dark"), settings = args.contains("--preview-settings")
         let model = AppModel.previewModel(unsynced: args.contains("--unsynced"))
+        model.settings.appearance = dark ? .dark : .light
+        try configureAppearance(args: args, model: model)
         model.statistics?.queriedRange = try? model.settings.resolvedRange(now: model.now)
         if args.contains("--preview-news") { model.selectedTab = .resetNews }
         if args.contains("--preview-analysis") { model.selectedTab = .analysis }
@@ -189,5 +197,20 @@ struct CodexUsageMain {
         guard let png = bitmap.representation(using: .png, properties: [:]) else { throw UsageError.message("无法导出 PNG") }
         try png.write(to: URL(fileURLWithPath: AppSettings.expandedPath(path)))
         print("已导出示例数据预览：\(path)")
+    }
+
+    @MainActor private static func configureAppearance(args: [String], model: AppModel) throws {
+        if let index = args.firstIndex(of: "--theme") {
+            guard args.indices.contains(index + 1), let theme = AppTheme(rawValue: args[index + 1]) else {
+                throw UsageError.message("无效主题；请选择 teal、ocean、forest、iris、sand 或 graphite。")
+            }
+            model.settings.theme = theme
+        }
+        if let index = args.firstIndex(of: "--appearance") {
+            guard args.indices.contains(index + 1), let appearance = AppAppearance(rawValue: args[index + 1]) else {
+                throw UsageError.message("无效外观；请选择 system、light 或 dark。")
+            }
+            model.settings.appearance = appearance
+        }
     }
 }

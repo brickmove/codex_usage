@@ -26,19 +26,20 @@
 <table>
   <tr><th>浅色外观</th><th>深色外观</th></tr>
   <tr>
-    <td align="center"><a href="docs/images/screenshots/0.4.0/overview-light.png"><img src="docs/images/screenshots/0.4.0/overview-light.png" width="360" alt="浅色概览：示例账户、每周额度、Credits 与四项用量统计"></a></td>
-    <td align="center"><a href="docs/images/screenshots/0.4.0/overview-dark.png"><img src="docs/images/screenshots/0.4.0/overview-dark.png" width="360" alt="深色概览：相同的账户额度与用量信息"></a></td>
+    <td align="center"><a href="docs/images/screenshots/0.5.0/overview-light.png"><img src="docs/images/screenshots/0.5.0/overview-light.png" width="360" alt="浅色概览：示例账户、每周额度、Credits 与四项用量统计"></a></td>
+    <td align="center"><a href="docs/images/screenshots/0.5.0/overview-dark.png"><img src="docs/images/screenshots/0.5.0/overview-dark.png" width="360" alt="深色概览：鸢尾主题与账户额度、用量信息"></a></td>
   </tr>
 </table>
 
-*截图来自 0.4.0 原生界面，使用示例账户、用量和动态，不代表真实账户或官方公告实录。点击图片可查看原图。*
+*截图来自 0.5.0 原生界面，使用示例账户、用量和动态，不代表真实账户或官方公告实录。点击图片可查看原图。*
 
 ## 功能
 
 | 你关心的事 | Codex Usage 提供的能力 |
 | --- | --- |
 | 还剩多少额度 | 每周及其他额度窗口、Credits、自动重置时间与可用重置次数 |
-| 菜单栏显示什么 | 自选指标、自由排序、仅显示图标；完整名称与范围放在悬停提示中 |
+| 菜单栏显示什么 | 自选指标、拖动排序、仅显示图标；完整名称与范围放在悬停提示中 |
+| 图标与外观怎么选 | 内置样式或导入图片，三档图标尺寸；六套主题，独立选择跟随系统、浅色或深色 |
 | 这段时间用了多少 | 已存费用、Token 用量、请求数、缓存命中率；默认当天，可改范围 |
 | Token 用在哪里 | 分析新增输入、输出、缓存写入与缓存命中的数值和份额 |
 | 是否有重置消息 | 独立重置动态页、来源链接、可关闭的菜单栏未读提醒 |
@@ -47,16 +48,24 @@
 <table>
   <tr><th>Token 分析</th><th>重置动态</th></tr>
   <tr>
-    <td align="center"><a href="docs/images/screenshots/0.4.0/analysis-light.png"><img src="docs/images/screenshots/0.4.0/analysis-light.png" width="360" alt="Token 分析：四类用量构成、数值与占比，并说明统计分母"></a></td>
-    <td align="center"><a href="docs/images/screenshots/0.4.0/reset-news.png"><img src="docs/images/screenshots/0.4.0/reset-news.png" width="360" alt="重置动态：示例预告与确认记录，附北京时间和来源链接"></a></td>
+    <td align="center"><a href="docs/images/screenshots/0.5.0/analysis-light.png"><img src="docs/images/screenshots/0.5.0/analysis-light.png" width="360" alt="Token 分析：四类用量构成、数值与占比，并说明统计分母"></a></td>
+    <td align="center"><a href="docs/images/screenshots/0.5.0/reset-news.png"><img src="docs/images/screenshots/0.5.0/reset-news.png" width="360" alt="重置动态：示例预告与确认记录，附北京时间和来源链接"></a></td>
   </tr>
 </table>
 
 <details>
 <summary>查看菜单栏自定义设置</summary>
 
-<p>勾选需要的指标，用上下箭头调整顺序，预览同步变化。设置按菜单栏、数据与刷新、重置动态分类；取消可撤销草稿，保存才生效。</p>
-<p align="center"><a href="docs/images/screenshots/0.4.0/settings-menu.png"><img src="docs/images/screenshots/0.4.0/settings-menu.png" width="520" alt="菜单栏设置：图标数值预览、指标勾选、排序和保存取消操作"></a></p>
+<p>勾选需要的指标，拖动左侧手柄或用上下箭头调整顺序，预览同步变化。菜单栏支持自定义图标；“外观”提供六套主题与明暗选择。取消可撤销草稿，保存才生效。</p>
+<p align="center"><a href="docs/images/screenshots/0.5.0/settings-menu.png"><img src="docs/images/screenshots/0.5.0/settings-menu.png" width="520" alt="菜单栏设置：图标导入、内置样式、尺寸选择与实时预览"></a></p>
+
+</details>
+
+<details>
+<summary>查看六套主题配色</summary>
+
+<p>青碧、海洋、森林、鸢尾、暖沙、石墨均支持浅色与深色，也可跟随系统。主题覆盖面板背景、卡片、文字和强调色。</p>
+<p align="center"><a href="docs/images/screenshots/0.5.0/settings-appearance.png"><img src="docs/images/screenshots/0.5.0/settings-appearance.png" width="520" alt="外观设置：六套主题、明暗选择与即时预览"></a></p>
 
 </details>
 
@@ -80,10 +89,10 @@
 
 **分发说明：** 当前应用使用 ad-hoc 签名，安装包尚未完成 Developer ID Installer 签名和 Apple 公证，跨机器安装可能受到 Gatekeeper 限制。暂未提供 Intel 安装包或自动更新。更新前先退出旧版，再安装新版；已有设置保留。
 
-每个 Release 附带 SHA-256 校验文件。以 0.4.0 为例，将两个文件放在同一目录后执行：
+每个 Release 附带 SHA-256 校验文件。以 0.5.0 为例，将两个文件放在同一目录后执行：
 
 ```bash
-shasum -a 256 -c Codex-Usage-0.4.0-arm64.pkg.sha256
+shasum -a 256 -c Codex-Usage-0.5.0-arm64.pkg.sha256
 ```
 
 ## 数据来源与隐私
@@ -94,7 +103,7 @@ shasum -a 256 -c Codex-Usage-0.4.0-arm64.pkg.sha256
 | 费用、Tokens、请求数、缓存命中率 | CC Switch 本地 SQLite 数据库 | 只读查询，费用直接汇总已存金额，不根据模型价格重新计算 |
 | 重置动态 | [AIHOT 的 Tibo 重置监控](https://aihot.news/codex-reset) | 第三方整理，预计窗口和确认帖时间不能等同个人账户到账时间 |
 
-本应用不直接读取认证文件、不保存 OAuth 凭据；账户显示信息仅保留在内存中。设置只保存路径、时间范围及显示偏好。发布包不包含个人数据库、登录凭据或用户设置。
+本应用不直接读取认证文件、不保存 OAuth 凭据；账户显示信息仅保留在内存中。设置保存路径、时间范围、显示与外观偏好，以及导入图标的本机副本；不会上传图标。发布包不包含个人数据库、登录凭据或用户设置。
 
 本机历史统计不保证按 ChatGPT 账户拆分，不能因为面板显示当前账户，就将全部历史归到该账户。统计费用也不等于订阅实付或 Credits 扣款。字段映射、去重及归档边界见 [数据源说明](docs/data-sources.md)。
 
@@ -117,8 +126,8 @@ shasum -a 256 -c Codex-Usage-0.4.0-arm64.pkg.sha256
 
 - [使用指南](docs/user-guide.md)：显示项目、刷新设置、统计同步、账户与重置动态。
 - [开发指南](docs/development.md)：源码构建、打包、诊断、测试与截图复现。
-- [验证记录](docs/verification.md)：106 项测试、原生界面检查及未实测边界。
+- [验证记录](docs/verification.md)：118 项测试、原生界面检查及未实测边界。
 - [重置动态协议](docs/reset-news.md) · [第三方声明](THIRD_PARTY_NOTICES.md)。
-- [版本与安装包](https://github.com/brickmove/codex_usage/releases)：[0.4.0 产品打磨](docs/releases/v0.4.0.md)，[0.3.3 初始基线](https://github.com/brickmove/codex_usage/releases/tag/v0.3.3)。
+- [版本与安装包](https://github.com/brickmove/codex_usage/releases)：[v0.5.0](docs/releases/v0.5.0.md)、[v0.4.0](docs/releases/v0.4.0.md)、[v0.3.3](https://github.com/brickmove/codex_usage/releases/tag/v0.3.3)。
 
 欢迎通过 [Issues](https://github.com/brickmove/codex_usage/issues) 反馈问题或建议。请附应用版本、macOS 版本、复现步骤和脱敏后的错误信息；不要上传认证文件、完整数据库或真实账户截图。

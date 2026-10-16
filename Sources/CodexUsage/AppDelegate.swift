@@ -64,12 +64,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         let presentation = model.menuPresentation(for: model.settings)
         let title = presentation.summary
         let indicator = model.showNewsIndicator
-        let leadingIcon = indicator || presentation.statisticsNotice != nil || presentation.items.isEmpty
-        let symbol = indicator ? "bell.badge.fill" : presentation.statisticsNotice != nil ? "exclamationmark.circle" : "gauge.with.dots.needle.50percent"
-        statusItem.button?.image = leadingIcon ? NSImage(systemSymbolName: symbol,
-                                          accessibilityDescription: indicator ? "有新的重置动态" : presentation.statisticsNotice ?? "Codex 用量") : nil
-        statusItem.button?.image?.isTemplate = true
-        statusItem.button?.attributedTitle = StatusItemContent.title(items: presentation.items, leadingSpace: leadingIcon)
+        let image = MenuBarIcon.image(settings: model.settings, unread: indicator,
+                                      notice: presentation.statisticsNotice, hasMetrics: !presentation.items.isEmpty)
+        statusItem.button?.image = image
+        statusItem.button?.attributedTitle = StatusItemContent.title(items: presentation.items, leadingSpace: image != nil)
+        popover.appearance = model.settings.appearance.nativeAppearance
         let errors = [model.quotaError.map { "额度：" + $0 }, model.statisticsError.map { "统计：" + $0 }].compactMap { $0 }
         let news = indicator ? "有 \(model.unreadNewsCount) 条未读重置动态，点击查看\n" : ""
         let detail = title.isEmpty ? "" : title.replacingOccurrences(of: " · ", with: "\n") + "\n"

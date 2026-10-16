@@ -17,6 +17,13 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var customStart = Calendar.current.startOfDay(for: Date())
     public var customEnd = Date()
     public var menuMetrics: [MenuMetric] = MenuMetric.defaults
+    public var menuIcon: MenuIconStyle = .automatic
+    public var menuIconSize: MenuIconSize = .regular
+    public var menuIconRendering: MenuIconRendering = .template
+    public var customMenuIcon: Data?
+    public var customMenuIconName: String?
+    public var theme: AppTheme = .teal
+    public var appearance: AppAppearance = .system
     public var resetNewsEnabled = true
     public var showResetNewsIndicator = true
     public var resetNewsInterval: TimeInterval = 600
@@ -25,6 +32,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     enum CodingKeys: String, CodingKey {
         case databasePath, codexPath, codexHome, quotaInterval, statisticsInterval, automaticallyStartCCSwitch
         case range, customStart, customEnd, menuMetrics, resetNewsEnabled, showResetNewsIndicator, resetNewsInterval
+        case menuIcon, menuIconSize, menuIconRendering, customMenuIcon, customMenuIconName, theme, appearance
     }
     private enum LegacyKeys: String, CodingKey { case showCreditsInMenu, showResetInMenu }
 
@@ -40,6 +48,14 @@ public struct AppSettings: Codable, Equatable, Sendable {
         range = try c.decodeIfPresent(RangePreset.self, forKey: .range) ?? range
         customStart = try c.decodeIfPresent(Date.self, forKey: .customStart) ?? customStart
         customEnd = try c.decodeIfPresent(Date.self, forKey: .customEnd) ?? customEnd
+        // A newer theme/icon identifier must not discard existing paths or metric preferences.
+        menuIcon = (try? c.decode(String.self, forKey: .menuIcon)).flatMap(MenuIconStyle.init(rawValue:)) ?? menuIcon
+        menuIconSize = (try? c.decode(Int.self, forKey: .menuIconSize)).flatMap(MenuIconSize.init(rawValue:)) ?? menuIconSize
+        menuIconRendering = (try? c.decode(String.self, forKey: .menuIconRendering)).flatMap(MenuIconRendering.init(rawValue:)) ?? menuIconRendering
+        customMenuIcon = try? c.decode(Data.self, forKey: .customMenuIcon)
+        customMenuIconName = try? c.decode(String.self, forKey: .customMenuIconName)
+        theme = (try? c.decode(String.self, forKey: .theme)).flatMap(AppTheme.init(rawValue:)) ?? theme
+        appearance = (try? c.decode(String.self, forKey: .appearance)).flatMap(AppAppearance.init(rawValue:)) ?? appearance
         resetNewsEnabled = try c.decodeIfPresent(Bool.self, forKey: .resetNewsEnabled) ?? resetNewsEnabled
         showResetNewsIndicator = try c.decodeIfPresent(Bool.self, forKey: .showResetNewsIndicator) ?? showResetNewsIndicator
         resetNewsInterval = try c.decodeIfPresent(TimeInterval.self, forKey: .resetNewsInterval) ?? resetNewsInterval
@@ -62,6 +78,11 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public mutating func moveMenuMetric(_ metric: MenuMetric, by offset: Int) {
         guard let index = menuMetrics.firstIndex(of: metric), menuMetrics.indices.contains(index + offset) else { return }
         menuMetrics.swapAt(index, index + offset)
+    }
+    public mutating func moveMenuMetric(_ metric: MenuMetric, to destination: Int) {
+        guard let index = menuMetrics.firstIndex(of: metric), menuMetrics.indices.contains(destination), index != destination else { return }
+        menuMetrics.remove(at: index)
+        menuMetrics.insert(metric, at: destination)
     }
     public func resolvedRange(now: Date = Date()) throws -> UsageRange {
         try range.resolve(now: now, start: customStart, end: customEnd)
