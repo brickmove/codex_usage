@@ -9,12 +9,12 @@
 ```bash
 ./scripts/build-app.sh
 mkdir -p build/readme-screenshots
-"build/Codex Usage.app/Contents/MacOS/CodexUsage" --preview build/readme-screenshots/overview-light.png
-"build/Codex Usage.app/Contents/MacOS/CodexUsage" --preview build/readme-screenshots/overview-dark.png --dark
-"build/Codex Usage.app/Contents/MacOS/CodexUsage" --preview-analysis build/readme-screenshots/analysis-light.png
-"build/Codex Usage.app/Contents/MacOS/CodexUsage" --preview-news build/readme-screenshots/reset-news.png
-"build/Codex Usage.app/Contents/MacOS/CodexUsage" --preview-settings build/readme-screenshots/settings-menu.png
-"build/Codex Usage.app/Contents/MacOS/CodexUsage" --preview-analysis build/readme-screenshots/unsynced.png --unsynced
+"build/Artifacts.noindex/Codex Usage.app/Contents/MacOS/CodexUsage" --preview build/readme-screenshots/overview-light.png
+"build/Artifacts.noindex/Codex Usage.app/Contents/MacOS/CodexUsage" --preview build/readme-screenshots/overview-dark.png --dark
+"build/Artifacts.noindex/Codex Usage.app/Contents/MacOS/CodexUsage" --preview-analysis build/readme-screenshots/analysis-light.png
+"build/Artifacts.noindex/Codex Usage.app/Contents/MacOS/CodexUsage" --preview-news build/readme-screenshots/reset-news.png
+"build/Artifacts.noindex/Codex Usage.app/Contents/MacOS/CodexUsage" --preview-settings build/readme-screenshots/settings-menu.png
+"build/Artifacts.noindex/Codex Usage.app/Contents/MacOS/CodexUsage" --preview-analysis build/readme-screenshots/unsynced.png --unsynced
 ```
 
 检查后将需要的图片复制到此目录。当前 `unsynced.png` 展示分析页的等待同步状态。应用图标位于上两级的 `app-icon.png`，来自同一构建生成的 `build/AppIcon.iconset/icon_128x128@2x.png`。

@@ -7,7 +7,7 @@ case "${1:-}" in
     --skip-build) ;;
     *) printf '用法：%s [--skip-build]\n' "$0" >&2; exit 1 ;;
 esac
-bundle="$project_dir/build/Codex Usage.app"
+bundle="$project_dir/build/Artifacts.noindex/Codex Usage.app"
 destination="/Applications/Codex Usage.app"
 identifier="local.codexusage.menubar"
 

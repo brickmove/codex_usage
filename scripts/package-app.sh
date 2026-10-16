@@ -3,7 +3,7 @@ set -euo pipefail
 
 project_dir="$(cd "$(dirname "$0")/.." && pwd)"
 "$project_dir/scripts/build-app.sh"
-bundle="$project_dir/build/Codex Usage.app"
+bundle="$project_dir/build/Artifacts.noindex/Codex Usage.app"
 info="$bundle/Contents/Info.plist"
 version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info")"
 identifier="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info")"

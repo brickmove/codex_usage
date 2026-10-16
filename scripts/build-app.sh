@@ -5,7 +5,7 @@ project_dir="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$project_dir"
 swift build --configuration release
 binary_dir="$(swift build --configuration release --show-bin-path)"
-bundle="$project_dir/build/Codex Usage.app"
+bundle="$project_dir/build/Artifacts.noindex/Codex Usage.app"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
 cp "$binary_dir/CodexUsage" "$bundle/Contents/MacOS/CodexUsage"
 cp "$project_dir/Resources/Info.plist" "$bundle/Contents/Info.plist"
