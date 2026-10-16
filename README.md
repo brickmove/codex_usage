@@ -4,6 +4,10 @@
 
 <h1 align="center">Codex Usage</h1>
 
+<p align="center">
+  <strong>简体中文</strong> · <a href="README.en.md" lang="en">English</a>
+</p>
+
 <p align="center">Codex 的额度、用量与重置动态，放在 macOS 菜单栏。</p>
 
 <p align="center">
