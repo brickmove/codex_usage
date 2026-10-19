@@ -181,7 +181,11 @@ private struct PopoverContent: View {
         HStack {
             Button { model.showSettings() } label: { Label("设置", systemImage: "gearshape") }
                 .keyboardShortcut(",", modifiers: .command)
-            Spacer()
+            Text(SystemUptime.text(now: model.now))
+                .monospacedDigit().foregroundStyle(style.secondary)
+                .lineLimit(1).minimumScaleFactor(0.85)
+                .frame(maxWidth: .infinity)
+                .help("本机自上次启动以来的时间，包含休眠时间；每 10 秒更新。")
             Button(model.selectedTab == .resetNews ? "打开 AIHOT" : "打开 CC Switch") {
                 if model.selectedTab == .resetNews { NSWorkspace.shared.open(ResetNewsSource.pageURL) }
                 else { openCCSwitch() }
